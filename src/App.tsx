@@ -39,6 +39,7 @@ import {
 } from 'lucide-react';
 
 import BackgroundPhysics from './components/BackgroundPhysics';
+import HeroInteractiveMesh from './components/HeroInteractiveMesh';
 import ProjectDemoModal from './components/ProjectDemoModal';
 import ResumeModal from './components/ResumeModal';
 
@@ -48,39 +49,6 @@ import { db, handleFirestoreError, OperationType } from './firebase';
 import { doc, getDocFromServer, collection, setDoc, serverTimestamp, getDocs, query, orderBy } from 'firebase/firestore';
 
 export default function App() {
-  // Navigation & Dynamic Projects States
-  const [portfolioProjects, setPortfolioProjects] = useState<Project[]>(projects);
-  const [newRepoName, setNewRepoName] = useState('');
-  const [newRepoDescription, setNewRepoDescription] = useState('');
-  const [isCreatingRepo, setIsCreatingRepo] = useState(false);
-  const [repoSubmitSuccess, setRepoSubmitSuccess] = useState(false);
-  const [repoError, setRepoError] = useState<string | null>(null);
-
-  // Load from Firestore on mount
-  useEffect(() => {
-    const loadSuggestedRepos = async () => {
-      try {
-        const q = query(collection(db, 'suggested_repositories'), orderBy('createdAt', 'desc'));
-        const querySnapshot = await getDocs(q);
-        const fetchedRepos = querySnapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            title: data.title,
-            description: data.description,
-            tags: ['User Suggested', 'Community Idea', 'Firebase Live'],
-            image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=400&h=250&q=80',
-            githubUrl: ''
-          } as Project;
-        });
-        setPortfolioProjects([...projects, ...fetchedRepos]);
-      } catch (error) {
-        console.error("Failed to load suggested repositories: ", error);
-      }
-    };
-    loadSuggestedRepos();
-  }, []);
-
   // Test connection to Firestore on initial boot as mandated by the Firebase Integration Skill
   useEffect(() => {
     const testConnection = async () => {
@@ -211,55 +179,6 @@ export default function App() {
     } catch (error) {
       setIsSending(false);
       console.error("Failed to submit message to the database: ", error);
-      handleFirestoreError(error, OperationType.WRITE, path);
-    }
-  };
-
-  const handleRepoSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setRepoError(null);
-    setRepoSubmitSuccess(false);
-
-    if (!newRepoName.trim()) {
-      setRepoError('Repository Name is required');
-      return;
-    }
-    if (!newRepoDescription.trim()) {
-      setRepoError('Repository Description is required');
-      return;
-    }
-
-    setIsCreatingRepo(true);
-    const path = 'suggested_repositories';
-    try {
-      const docRef = doc(collection(db, path));
-      const repoData = {
-        title: newRepoName.trim(),
-        description: newRepoDescription.trim(),
-        createdAt: serverTimestamp()
-      };
-
-      await setDoc(docRef, repoData);
-
-      // Prepend to our live portfolioProjects state instantly so the visitor receives instant feedback!
-      const newRepoCard: Project = {
-        id: docRef.id,
-        title: repoData.title,
-        description: repoData.description,
-        tags: ['User Suggested', 'Community Idea', 'Firebase Live'],
-        image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=400&h=250&q=80',
-        githubUrl: ''
-      };
-
-      setPortfolioProjects(prev => [newRepoCard, ...prev]);
-      setNewRepoName('');
-      setNewRepoDescription('');
-      setIsCreatingRepo(false);
-      setRepoSubmitSuccess(true);
-      setTimeout(() => setRepoSubmitSuccess(false), 5000);
-    } catch (error) {
-      setIsCreatingRepo(false);
-      console.error("Failed to submit repository suggestion: ", error);
       handleFirestoreError(error, OperationType.WRITE, path);
     }
   };
@@ -472,97 +391,13 @@ export default function App() {
         {/* HERO SECTION */}
         <section 
           id="hero" 
-          className="relative min-h-[95vh] flex flex-col justify-center items-center px-6 md:px-12 text-center overflow-hidden"
+          className="relative min-h-[92vh] flex flex-col justify-center items-center px-6 md:px-12 text-center overflow-hidden"
         >
-           {/* Accent dot grid pattern mapping to break up solid white space */}
-          <div 
-            style={{ transform: `translate3d(0, ${scrollY * 0.08}px, 0)` }} 
-            className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1.5px,transparent_1.5px)] dark:bg-[radial-gradient(#1e293b_1.5px,transparent_1.5px)] [background-size:24px_24px] opacity-75 -z-20 pointer-events-none transition-transform duration-100 ease-out" 
-          />
+          {/* Beautiful modern interactive ambient mesh particles & soft float glows */}
+          <HeroInteractiveMesh isDarkMode={isDarkMode} />
 
-          {/* Dual subtle background ambient radial beams */}
-          <div 
-            style={{ transform: `translate3d(0, ${scrollY * -0.06}px, 0)` }} 
-            className="absolute left-1/4 top-1/4 w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-primary/10 to-transparent blur-3xl -z-15 pointer-events-none animate-float-slow transition-transform duration-150 ease-out" 
-          />
-          <div 
-            style={{ transform: `translate3d(0, ${scrollY * -0.04}px, 0)` }} 
-            className="absolute right-1/4 bottom-1/4 w-[400px] h-[400px] rounded-full bg-gradient-to-tr from-secondary/10 to-transparent blur-3xl -z-15 pointer-events-none animate-float-delayed transition-transform duration-150 ease-out" 
-          />
-
-          {/* Animated Glowing Orb Vector */}
-          <div 
-            style={{ transform: `translate3d(0, ${scrollY * 0.12}px, 0)` }}
-            className="absolute w-72 h-72 rounded-full glass-card opacity-35 blur-3xl -z-10 floating-orb transition-transform duration-100 ease-out"
-          >
-            <div className="absolute inset-0 rotating-glow bg-gradient-to-tr from-primary-container/30 to-secondary-container/30 rounded-full" />
-          </div>
-
-          {/* Left Floating Interactive Card: AI Intelligence Node */}
-          <div 
-            style={{ 
-              backgroundColor: `rgba(255, 255, 255, ${glassOpacityValue})`,
-              transform: `translate3d(0, ${scrollY * -0.15}px, 0)`
-            }}
-            className="absolute left-6 xl:left-24 top-[24%] w-60 hidden lg:flex flex-col gap-3 p-4 text-left glass-card specular-edge rounded-xl select-none border border-black/5 shadow-lg group hover:scale-102 hover:border-primary/30 transition-all duration-300 pointer-events-none"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#00dfc0] animate-pulse" />
-                <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">
-                  AI Pipeline Agent
-                </span>
-              </div>
-              <Cpu className="w-3.5 h-3.5 text-primary group-hover:rotate-12 transition-transform" />
-            </div>
-
-            <div className="space-y-1">
-              <h5 className="font-display font-black text-xs text-on-surface">
-                Dynamic Orchestration
-              </h5>
-              <p className="text-[10px] text-on-surface-variant/90 leading-normal">
-                Google Gemini API pipelines & customized prompt engineering loops built with Python & Node.
-              </p>
-            </div>
-
-            <div className="border-t border-black/5 pt-2.5 flex items-center justify-between font-mono text-[9px] text-[#4457b3] font-bold">
-              <span>ACTIVE METRIC</span>
-              <span className="bg-primary/10 px-1.5 py-0.5 rounded text-primary text-[8px] animate-pulse">0.2s latency</span>
-            </div>
-          </div>
-
-          {/* Right Floating Interactive Card: AWS Stack Node */}
-          <div 
-            style={{ 
-              backgroundColor: `rgba(255, 255, 255, ${glassOpacityValue})`,
-              transform: `translate3d(0, ${scrollY * -0.22}px, 0)`
-            }}
-            className="absolute right-6 xl:right-24 top-[32%] w-60 hidden lg:flex flex-col gap-3 p-4 text-left glass-card specular-edge rounded-xl select-none border border-black/5 shadow-lg group hover:scale-102 hover:border-secondary/30 transition-all duration-300 pointer-events-none"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <Layers className="w-3.5 h-3.5 text-secondary group-hover:scale-110 transition-transform" />
-                <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">
-                  Cloud Infrastructure
-                </span>
-              </div>
-              <Cloud className="w-3.5 h-3.5 text-secondary" />
-            </div>
-
-            <div className="space-y-1">
-              <h5 className="font-display font-black text-xs text-on-surface">
-                Fully Serverless
-              </h5>
-              <p className="text-[10px] text-on-surface-variant/90 leading-normal">
-                Highly scalable AWS Lambda microservices, IAM Security policies, & fast API Gateway triggers.
-              </p>
-            </div>
-
-            <div className="border-t border-black/5 pt-2.5 flex items-center justify-between font-mono text-[9px]">
-              <span className="text-[#006b5b]">DEPLOYED WORK</span>
-              <span className="text-secondary font-bold">AWS Certified</span>
-            </div>
-          </div>
+          {/* Clean ambient radial gradient overlay to soften edges further */}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/40 to-background -z-10 pointer-events-none" />
 
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
@@ -616,6 +451,7 @@ export default function App() {
                 Contact Me <ArrowRight className="w-4 h-4 text-primary animate-pulse" />
               </button>
             </div>
+
           </motion.div>
  
           <div 
@@ -782,81 +618,7 @@ export default function App() {
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* The Interactive Repository Creator form card */}
-            <div 
-              style={{ backgroundColor: `rgba(255, 255, 255, ${glassOpacityValue + 0.05})` }}
-              className="glass-card specular-edge rounded-xl p-6 md:p-8 border border-primary/20 shadow-md flex flex-col justify-between space-y-4 relative overflow-hidden group min-h-[350px]"
-            >
-              <div className="absolute top-0 right-0 p-3 opacity-25">
-                <Code className="w-16 h-16 text-primary animate-pulse" />
-              </div>
-
-              <div className="space-y-1 z-10 text-left">
-                <span className="bg-primary/10 text-primary px-2.5 py-1 rounded text-[10px] font-bold font-mono tracking-wider">
-                  FIREBASE LIVE SYNC
-                </span>
-                <h3 className="font-display text-xl font-black text-on-surface leading-tight">
-                  Propose & Submit a Repository
-                </h3>
-                <p className="text-xs text-on-surface-variant/90 leading-relaxed">
-                  Submit any repository suggestion to Shubham's portfolio. It actually stores live over cloud databases and updates this view instantly!
-                </p>
-              </div>
-
-              <form onSubmit={handleRepoSubmit} className="space-y-3 z-10 text-left">
-                {repoSubmitSuccess && (
-                  <p className="text-emerald-600 text-[11px] font-semibold flex items-center gap-1 bg-emerald-50 p-2 rounded">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Repository listed successfully!
-                  </p>
-                )}
-                {repoError && (
-                  <p className="text-rose-500 text-[11px] font-semibold flex items-center gap-1 bg-rose-50 p-2 rounded">
-                    <AlertCircle className="w-3.5 h-3.5 text-rose-400" /> {repoError}
-                  </p>
-                )}
-
-                <div className="space-y-1">
-                  <label className="text-[9px] font-mono font-bold text-on-surface-variant uppercase tracking-wider">
-                    New repository name
-                  </label>
-                  <input 
-                    type="text"
-                    value={newRepoName}
-                    onChange={e => setNewRepoName(e.target.value)}
-                    placeholder="e.g. quantum-inference-engine"
-                    className="w-full bg-black/5 border border-black/5 rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary transition-colors"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[9px] font-mono font-bold text-on-surface-variant uppercase tracking-wider">
-                    New repository description
-                  </label>
-                  <textarea 
-                    value={newRepoDescription}
-                    onChange={e => setNewRepoDescription(e.target.value)}
-                    placeholder="e.g. Sub-centisecond hyperparameter pipeline optimization engine with Rust..."
-                    rows={2}
-                    className="w-full bg-black/5 border border-black/5 rounded-lg px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary transition-colors"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isCreatingRepo}
-                  className="w-full bg-primary text-white text-xs font-bold font-display py-2.5 rounded-lg hover:scale-101 active:scale-99 transition-all flex items-center justify-center gap-1.5"
-                >
-                  {isCreatingRepo ? (
-                    <div className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    <Send className="w-3 h-3" />
-                  )}
-                  {isCreatingRepo ? 'Provisioning Showcase...' : 'Create Live Showcase'}
-                </button>
-              </form>
-            </div>
-
-            {portfolioProjects.map((project) => (
+            {projects.map((project) => (
               <div 
                 key={project.id}
                 style={{ backgroundColor: `rgba(255, 255, 255, ${glassOpacityValue})` }}
@@ -884,7 +646,7 @@ export default function App() {
                       </p>
                     </div>
 
-                    {/* Displays custom badge tags for newly added community suggested repos */}
+                    {/* Displays custom badge tags */}
                     {project.tags && project.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1">
                         {project.tags.map((tag, i) => (
@@ -901,19 +663,12 @@ export default function App() {
                   {/* Buttons for actions */}
                   <div className="flex flex-wrap gap-3 pt-2">
                     <button 
-                      onClick={() => {
-                        if (project.id.startsWith('aether') || project.id.startsWith('campaign')) {
-                          setSelectedDemoProjectId(project.id);
-                        } else {
-                          // Simple alert message or modal simulation for user-created ones
-                          alert(`Custom interactive sandbox preview for '${project.title}' is currently deploying under Shubham's pipelines. Details: ${project.description}`);
-                        }
-                      }}
+                      onClick={() => setSelectedDemoProjectId(project.id)}
                       className="flex items-center gap-2 bg-black/5 hover:bg-black/10 px-4 py-2 rounded-lg font-display text-xs font-bold transition-all text-on-surface hover:scale-[1.03] active:scale-95"
                     >
                       <Sparkles className="w-4 h-4 text-primary animate-spin-slow" /> Interactive Demo
                     </button>
-                    {project.githubUrl ? (
+                    {project.githubUrl && (
                       <a 
                         href={project.githubUrl} 
                         target="_blank" 
@@ -922,10 +677,6 @@ export default function App() {
                       >
                         <Github className="w-4 h-4 text-secondary" /> Source Code
                       </a>
-                    ) : (
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold font-mono text-emerald-600 bg-emerald-50 border border-emerald-100">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Synchronized
-                      </div>
                     )}
                   </div>
                 </div>
