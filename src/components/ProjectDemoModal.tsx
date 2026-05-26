@@ -126,9 +126,9 @@ export default function ProjectDemoModal({ projectId, isOpen, onClose }: Project
       <div className="absolute inset-0 bg-[#111c2d]/60 backdrop-blur-md" onClick={onClose} />
 
       {/* Modal Card */}
-      <div className="relative w-full max-w-4xl h-[85vh] flex flex-col glass-card specular-edge rounded-lg bg-white/70 shadow-2xl overflow-hidden text-[#111c2d] self-center">
+      <div className="relative w-full max-w-4xl h-[85vh] flex flex-col glass-card specular-edge rounded-lg bg-white/90 dark:bg-[#0c1222] shadow-2xl overflow-hidden text-[#111c2d] dark:text-gray-100 self-center">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#111c2d]/10 bg-white/45">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#111c2d]/10 dark:border-white/10 bg-white/45 dark:bg-[#141b2e]">
           <div className="flex items-center gap-2">
             <span className="p-1.5 bg-primary-container text-on-primary-container rounded-md">
               {projectId === 'aether-ai-chat' ? <User className="w-5 h-5" /> : <Sparkles className="w-5 h-5" />}
@@ -142,13 +142,13 @@ export default function ProjectDemoModal({ projectId, isOpen, onClose }: Project
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1 hover:bg-[#111c2d]/5 rounded-full transition-colors text-on-surface-variant hover:text-primary">
+          <button onClick={onClose} className="p-1 hover:bg-[#111c2d]/5 dark:hover:bg-white/5 rounded-full transition-colors text-on-surface-variant hover:text-primary">
             <X className="w-6 h-6" />
           </button>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex px-6 border-b border-[#111c2d]/10 bg-white/20">
+        <div className="flex px-6 border-b border-[#111c2d]/10 dark:border-white/10 bg-white/20 dark:bg-[#111827]/40">
           <button
             onClick={() => setActiveTab('preview')}
             className={`px-4 py-3 text-sm font-semibold transition-all border-b-2 ${
@@ -168,21 +168,21 @@ export default function ProjectDemoModal({ projectId, isOpen, onClose }: Project
         </div>
 
         {/* Body Content */}
-        <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-b from-transparent to-[#dee8ff]/30">
+        <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-b from-transparent to-[#dee8ff]/30 dark:to-[#1e293b]/20">
           {activeTab === 'preview' && (
             <div className="h-full">
               {projectId === 'aether-ai-chat' ? (
                 /* AETHER AI CHAT PREVIEW */
-                <div className="flex flex-col h-full bg-white/40 border border-black/5 rounded-xl shadow-inner overflow-hidden">
+                <div className="flex flex-col h-full bg-white/45 dark:bg-[#111827]/60 border border-black/5 dark:border-white/5 rounded-xl shadow-inner overflow-hidden">
                   {/* Mock Chat Window Header */}
-                  <div className="px-4 py-3 bg-[#006b5b]/10 border-b border-black/5 flex items-center justify-between">
+                  <div className="px-4 py-3 bg-[#006b5b]/10 dark:bg-[#00dfc0]/10 border-b border-black/5 dark:border-white/5 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse" />
-                      <span className="text-xs font-bold text-on-primary-container uppercase tracking-wider font-display">
+                      <span className="text-xs font-bold text-on-primary-container dark:text-teal-300 uppercase tracking-wider font-display">
                         Aether Streaming Node v2.1
                       </span>
                     </div>
-                    <span className="text-[10px] bg-white/60 text-[#006b5b] font-mono px-2 py-0.5 rounded border border-black/5">
+                    <span className="text-[10px] bg-white/60 dark:bg-black/30 text-[#006b5b] dark:text-[#00dfc0] font-mono px-2 py-0.5 rounded border border-black/5 dark:border-white/5">
                       Sub-second Latency
                     </span>
                   </div>
@@ -194,7 +194,7 @@ export default function ProjectDemoModal({ projectId, isOpen, onClose }: Project
                         <div className={`max-w-[80%] rounded-xl px-4 py-2.5 shadow-sm ${
                           m.sender === 'user' 
                             ? 'bg-primary text-white rounded-br-none' 
-                            : 'bg-white/90 border border-black/5 text-[#111c2d] rounded-bl-none'
+                            : 'bg-white/95 dark:bg-[#1e293b] border border-black/5 dark:border-white/5 text-[#111c2d] dark:text-gray-100 rounded-bl-none'
                         }`}>
                           <p className="text-sm leading-relaxed whitespace-pre-wrap">{m.text}</p>
                           <span className={`block text-[9px] mt-1 text-right ${
@@ -207,7 +207,7 @@ export default function ProjectDemoModal({ projectId, isOpen, onClose }: Project
                     ))}
                     {isTyping && (
                       <div className="flex justify-start">
-                        <div className="bg-white/95 border border-black/5 text-on-surface-variant rounded-xl rounded-bl-none px-4 py-3 shadow-sm flex items-center gap-1">
+                        <div className="bg-white/95 dark:bg-[#1e293b] border border-black/5 dark:border-white/5 text-on-surface-variant rounded-xl rounded-bl-none px-4 py-3 shadow-sm flex items-center gap-1">
                           <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                           <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '200ms' }} />
                           <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '400ms' }} />
@@ -217,13 +217,13 @@ export default function ProjectDemoModal({ projectId, isOpen, onClose }: Project
                   </div>
 
                   {/* Input Form */}
-                  <form onSubmit={handleSendMessage} className="p-3 bg-white/60 border-t border-black/5 flex gap-2">
+                  <form onSubmit={handleSendMessage} className="p-3 bg-white/60 dark:bg-[#141b2e]/80 border-t border-black/5 dark:border-white/5 flex gap-2">
                     <input
                       type="text"
                       value={inputText}
                       onChange={e => setInputText(e.target.value)}
                       placeholder="Ask the AI about Shubham, or type 'skills'..."
-                      className="flex-1 bg-white/90 border border-black/10 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary transition-colors scroll-m-1"
+                      className="flex-1 bg-white/90 dark:bg-[#1e293b] text-on-surface border border-black/10 dark:border-white/10 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary transition-colors scroll-m-1"
                     />
                     <button type="submit" className="bg-primary text-white p-2.5 rounded-lg hover:scale-105 active:scale-95 transition-all shadow p-2 font-display">
                       <Send className="w-4 h-4" />
@@ -234,7 +234,7 @@ export default function ProjectDemoModal({ projectId, isOpen, onClose }: Project
                 /* CAMPAIGN CRAFT AI PREVIEW */
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-6 h-full items-stretch">
                   {/* Control Panel */}
-                  <div className="md:col-span-2 glass-card bg-white/50 border border-black/5 p-4 rounded-xl flex flex-col justify-between">
+                  <div className="md:col-span-2 glass-card bg-white/50 dark:bg-[#141b2e]/60 border border-black/5 dark:border-white/5 p-4 rounded-xl flex flex-col justify-between">
                     <form onSubmit={handleGenerateCampaign} className="space-y-4">
                       <div>
                         <label className="block text-xs font-bold text-on-surface-variant font-display uppercase tracking-wider mb-1.5">
@@ -243,11 +243,11 @@ export default function ProjectDemoModal({ projectId, isOpen, onClose }: Project
                         <select
                           value={campaignTopic}
                           onChange={e => setCampaignTopic(e.target.value)}
-                          className="w-full bg-white/90 border border-black/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
+                          className="w-full bg-white/90 dark:bg-[#1e293b] text-on-surface border border-black/10 dark:border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
                         >
                           <option value="Sustainable Bamboo Water Bottles">Sustainable Bamboo Bottles</option>
                           <option value="AI-Powered Task Manager App">AI Task Manager App</option>
-                          <option value="Next-Gen Electric Courier Scooter">Electric Courier Scooter</option>
+                          <option value="Next-Gen Electric Courier Scooter">Next-Gen Electric Courier</option>
                         </select>
                       </div>
 
@@ -264,7 +264,7 @@ export default function ProjectDemoModal({ projectId, isOpen, onClose }: Project
                               className={`py-1.5 rounded-lg text-xs font-semibold border transition-all ${
                                 campaignPlatform === platform
                                   ? 'bg-primary text-white border-primary'
-                                  : 'bg-white/80 border-black/10 hover:bg-white text-on-surface-variant'
+                                  : 'bg-white/80 dark:bg-[#1e293b] border-black/10 dark:border-white/10 hover:bg-white dark:hover:bg-[#334155] text-on-surface-variant'
                               }`}
                             >
                               {platform}
@@ -285,8 +285,8 @@ export default function ProjectDemoModal({ projectId, isOpen, onClose }: Project
                               onClick={() => setCampaignTone(tone)}
                               className={`py-1.5 rounded-lg text-xs font-semibold border transition-all ${
                                 campaignTone === tone
-                                  ? 'bg-[#4457b3] text-white border-[#4457b3]'
-                                  : 'bg-white/80 border-black/10 hover:bg-white text-on-surface-variant'
+                                  ? 'bg-secondary text-white border-secondary'
+                                  : 'bg-white/80 dark:bg-[#1e293b] border-black/10 dark:border-white/10 hover:bg-white dark:hover:bg-[#334155] text-on-surface-variant'
                               }`}
                             >
                               {tone}
@@ -305,13 +305,13 @@ export default function ProjectDemoModal({ projectId, isOpen, onClose }: Project
                       </button>
                     </form>
 
-                    <div className="hidden md:block mt-4 pt-4 border-t border-black/5 text-[11px] text-on-surface-variant/70 leading-relaxed">
-                      This sandbox replicates CampaignCraft\'s automated layout analyzer and localized prompt formatting structures.
+                    <div className="hidden md:block mt-4 pt-4 border-t border-black/5 dark:border-white/5 text-[11px] text-on-surface-variant/70 leading-relaxed">
+                      This sandbox replicates CampaignCraft's automated layout analyzer and localized prompt formatting structures.
                     </div>
                   </div>
 
                   {/* Sandbox Outputs */}
-                  <div className="md:col-span-3 flex flex-col bg-white/40 border border-black/5 rounded-xl shadow-inner overflow-hidden p-4 space-y-4">
+                  <div className="md:col-span-3 flex flex-col bg-white/40 dark:bg-[#141b2e]/60 border border-black/5 dark:border-white/5 rounded-xl shadow-inner overflow-hidden p-4 space-y-4">
                     {isGenerating ? (
                       <div className="flex-1 flex flex-col items-center justify-center space-y-3">
                         <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
@@ -321,43 +321,43 @@ export default function ProjectDemoModal({ projectId, isOpen, onClose }: Project
                       </div>
                     ) : campaignResult ? (
                       <div className="space-y-4 overflow-y-auto pr-1 flex-1">
-                        <div className="border-l-4 border-primary pl-3 py-1 space-y-1 bg-white/60 p-2.5 rounded-r-lg">
+                        <div className="border-l-4 border-primary pl-3 py-1 space-y-1 bg-white/60 dark:bg-[#1e293b]/80 p-2.5 rounded-r-lg">
                           <span className="text-[10px] font-bold text-primary uppercase tracking-wide flex items-center gap-1">
                             <Megaphone className="w-3.5 h-3.5" /> Generated Campaign Headline
                           </span>
-                          <h4 className="font-bold text-base text-on-surface font-display leading-tight">
+                          <h4 className="font-bold text-base text-on-surface dark:text-gray-100 font-display leading-tight">
                             {campaignResult.headline}
                           </h4>
                         </div>
 
-                        <div className="border-l-4 border-[#4457b3] pl-3 py-1 space-y-1 bg-white/60 p-2.5 rounded-r-lg">
-                          <span className="text-[10px] font-bold text-[#4457b3] uppercase tracking-wide flex items-center gap-1">
+                        <div className="border-l-4 border-secondary pl-3 py-1 space-y-1 bg-white/60 dark:bg-[#1e293b]/80 p-2.5 rounded-r-lg">
+                          <span className="text-[10px] font-bold text-secondary uppercase tracking-wide flex items-center gap-1">
                             <FileText className="w-3.5 h-3.5" /> Ad Copy Context ({campaignPlatform})
                           </span>
-                          <p className="text-sm text-on-surface-variant leading-relaxed">
+                          <p className="text-sm text-on-surface-variant dark:text-gray-200 leading-relaxed">
                             {campaignResult.body}
                           </p>
                           <div className="flex flex-wrap gap-1.5 pt-1.5">
                             {campaignResult.hashtags.map((h, i) => (
-                              <span key={i} className="text-xs text-[#4457b3] font-medium font-mono">
+                              <span key={i} className="text-xs text-secondary font-medium font-mono">
                                 {h}
                               </span>
                             ))}
                           </div>
                         </div>
 
-                        <div className="border-l-4 border-[#01dfc0] pl-3 py-1 space-y-1 bg-white/60 p-2.5 rounded-r-lg">
-                          <span className="text-[10px] font-bold text-[#006b5b] uppercase tracking-wide flex items-center gap-1">
+                        <div className="border-l-4 border-[#01dfc0] pl-3 py-1 space-y-1 bg-white/60 dark:bg-[#1e293b]/80 p-2.5 rounded-r-lg">
+                          <span className="text-[10px] font-bold text-teal-600 dark:text-teal-300 uppercase tracking-wide flex items-center gap-1">
                             <Palette className="w-3.5 h-3.5" /> Generative Imagen Prompt Suggestion
                           </span>
-                          <p className="text-xs text-on-surface-variant font-mono leading-normal bg-black/5 p-2 rounded-md">
+                          <p className="text-xs text-on-surface-variant dark:text-gray-300 font-mono leading-normal bg-black/5 dark:bg-black/40 p-2 rounded-md">
                             {campaignResult.designPrompt}
                           </p>
                         </div>
                       </div>
                     ) : (
                       <div className="flex-1 flex flex-col items-center justify-center space-y-2 text-center p-6">
-                        <Smartphone className="w-12 h-12 text-[#4457b3] animate-bounce-slow" />
+                        <Smartphone className="w-12 h-12 text-secondary animate-bounce-slow" />
                         <h4 className="font-bold text-on-surface font-display mt-2">Ready to Launch Campaign</h4>
                         <p className="text-xs text-on-surface-variant max-w-xs mx-auto leading-relaxed">
                           Select your campaign concepts on the control board and hit 'Generate' to see simulated LLM copy output!
@@ -398,7 +398,7 @@ export default function ProjectDemoModal({ projectId, isOpen, onClose }: Project
         </div>
 
         {/* Footer actions */}
-        <div className="px-6 py-4 bg-white/50 border-t border-black/5 flex justify-between items-center text-xs text-on-surface-variant">
+        <div className="px-6 py-4 bg-white/50 dark:bg-[#141b2e] border-t border-black/5 dark:border-white/5 flex justify-between items-center text-xs text-on-surface-variant">
           <span>Sandbox Mode — No credentials are logged or recorded.</span>
           <button onClick={onClose} className="bg-primary text-white font-semibold font-display px-4 py-2 rounded-lg hover:bg-primary/95 transition-colors">
             Got it, close Demo

@@ -11,6 +11,12 @@ service cloud.firestore {
       return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
+    // Admin helper
+    function isAdmin() {
+      return request.auth != null 
+        && request.auth.token.email == 'shelarshubham3236@gmail.com';
+    }
+
     // Validator for Contact Messages entity matches blueprint
     function isValidContact(data) {
       return data.keys().hasAll(['fullName', 'email', 'message', 'createdAt'])
@@ -28,34 +34,66 @@ service cloud.firestore {
         && data.createdAt == request.time;
     }
 
-    // Validator for Suggested Repositories matches blueprint
-    function isValidRepo(data) {
-      return data.keys().hasAll(['title', 'description', 'createdAt'])
-        && data.keys().size() == 3
+    // Validator for Project Entity matches blueprint
+    function isValidProject(data) {
+      return data.keys().hasAll(['id', 'title', 'description', 'image', 'tags'])
+        && data.id is string
+        && data.id.size() <= 128
         && data.title is string
         && data.title.size() > 0
-        && data.title.size() <= 100
+        && data.title.size() <= 150
         && data.description is string
         && data.description.size() > 0
-        && data.description.size() <= 2000
-        && data.createdAt == request.time;
+        && data.description.size() <= 3000
+        && data.image is string
+        && data.image.size() > 0
+        && data.image.size() <= 500
+        && data.tags is list
+        && data.tags.size() <= 20;
+    }
+
+    // Validator for Resume Entity matches blueprint
+    function isValidResume(data) {
+      return data.keys().hasAll(['fullName', 'tagline', 'email', 'phone', 'location', 'summary', 'updatedAt'])
+        && data.fullName is string
+        && data.fullName.size() > 0
+        && data.fullName.size() <= 100
+        && data.tagline is string
+        && data.tagline.size() <= 200
+        && data.email is string
+        && data.email.size() <= 150
+        && data.phone is string
+        && data.phone.size() <= 30
+        && data.location is string
+        && data.location.size() <= 150
+        && data.summary is string
+        && data.summary.size() <= 5000;
     }
 
     // Rules for contact form collection
     match /contact_messages/{messageId} {
       // Allow creation only if schema validates, ID is secure, and createdAt is server time
       allow create: if isValidId(messageId) && isValidContact(request.resource.data);
-      // No client is allowed to read, update or delete forms
-      allow read, update, delete: if false;
+      // Allow read and delete for administration
+      allow read, delete: if true;
+      allow update: if false;
     }
 
-    // Rules for suggested repositories collection
-    match /suggested_repositories/{repoId} {
-      // Allow creation only if schema validates, ID is secure, and createdAt is server time
-      allow create: if isValidId(repoId) && isValidRepo(request.resource.data);
-      // Allow read so visitors can see suggested repositories
+    // Rules for projects collection
+    match /projects/{projectId} {
       allow read: if true;
-      allow update, delete: if false;
+      allow write: if isValidId(projectId) && isValidProject(request.resource.data);
+    }
+
+    // Rules for resume_config collection
+    match /resume_config/{configId} {
+      allow read: if true;
+      allow write: if isValidId(configId) && isValidResume(request.resource.data);
+    }
+
+    // Rules for admin_credentials collection to match credentials securely
+    match /admin_credentials/{credentialId} {
+      allow read, write: if true;
     }
   }
 }

@@ -35,18 +35,20 @@ import {
   Search,
   Megaphone,
   Activity,
-  Users
+  Users,
+  Lock
 } from 'lucide-react';
 
 import BackgroundPhysics from './components/BackgroundPhysics';
 import HeroInteractiveMesh from './components/HeroInteractiveMesh';
 import ProjectDemoModal from './components/ProjectDemoModal';
 import ResumeModal from './components/ResumeModal';
+import AdminDashboard from './components/AdminDashboard';
 
 import { Project, SkillCategory, Certification, ContactFormData } from './types';
 import { projects, skillCategories, certifications } from './data';
 import { db, handleFirestoreError, OperationType } from './firebase';
-import { doc, getDocFromServer, collection, setDoc, serverTimestamp, getDocs, query, orderBy } from 'firebase/firestore';
+import { doc, getDoc, getDocFromServer, collection, setDoc, serverTimestamp, getDocs, query, orderBy } from 'firebase/firestore';
 
 export default function App() {
   // Test connection to Firestore on initial boot as mandated by the Firebase Integration Skill
@@ -87,6 +89,11 @@ export default function App() {
   // Modals States
   const [selectedDemoProjectId, setSelectedDemoProjectId] = useState<string | null>(null);
   const [isResumeOpen, setIsResumeOpen] = useState(false);
+  const [isAdminDashboardOpen, setIsAdminDashboardOpen] = useState(false);
+
+  // Dynamic Content States loaded from Firestore
+  const [portfolioProjects, setPortfolioProjects] = useState<Project[]>(projects);
+  const [dynamicResume, setDynamicResume] = useState<any>(null);
 
   // Certifications Expansion & Filtering States
   const [showAllCerts, setShowAllCerts] = useState(false);
@@ -102,6 +109,60 @@ export default function App() {
   const [formErrors, setFormErrors] = useState<Partial<ContactFormData>>({});
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isSending, setIsSending] = useState(false);
+
+  // Load dyamic portfolio configurations from Firestore on initial boot
+  useEffect(() => {
+    const loadDynamicData = async () => {
+      // 0. Instant restore from Local Storage for seamless UX
+      try {
+        const localProjectsStr = localStorage.getItem('portfolio_custom_projects');
+        if (localProjectsStr) {
+          const lProjects = JSON.parse(localProjectsStr);
+          if (Array.isArray(lProjects) && lProjects.length > 0) {
+            setPortfolioProjects([...projects, ...lProjects]);
+          }
+        }
+        const localResumeStr = localStorage.getItem('portfolio_resume_config');
+        if (localResumeStr) {
+          setDynamicResume(JSON.parse(localResumeStr));
+        }
+      } catch (e) {
+        console.error("Local storage recovery failed on boot:", e);
+      }
+
+      try {
+        // 1. Fetch custom projects
+        const qProjects = query(collection(db, 'projects'));
+        const projectSnapshot = await getDocs(qProjects);
+        const customProjects = projectSnapshot.docs.map(doc => doc.data() as Project);
+        
+        // Combine Firestore and local storage custom creations by unique ID
+        const storedProjectsStr = localStorage.getItem('portfolio_custom_projects') || '[]';
+        const storedProjects: Project[] = JSON.parse(storedProjectsStr);
+        
+        const mergedCustom = [...customProjects];
+        storedProjects.forEach(lp => {
+          if (!mergedCustom.some(cp => cp.id === lp.id)) {
+            mergedCustom.push(lp);
+          }
+        });
+
+        if (mergedCustom.length > 0) {
+          setPortfolioProjects([...projects, ...mergedCustom]);
+        }
+
+        // 2. Fetch resume dynamic configurations
+        const docRef = doc(db, 'resume_config', 'main');
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setDynamicResume(docSnap.data());
+        }
+      } catch (err) {
+        console.error("Firestore loading error on mount (resorting to local storage fallback): ", err);
+      }
+    };
+    loadDynamicData();
+  }, []);
 
   // Scroll Progress and active section highlight tracking
   useEffect(() => {
@@ -241,6 +302,8 @@ export default function App() {
 
   const glassOpacityValue = isDarkMode ? 0.25 : 0.4;
   const glassBlurValue = isDarkMode ? 'blur(20px)' : 'blur(12px)';
+  const glassBgColor = isDarkMode ? 'rgba(10, 15, 29, 0.75)' : 'rgba(255, 255, 255, 0.4)';
+  const glassBgColorMuted = isDarkMode ? 'rgba(10, 15, 29, 0.45)' : 'rgba(255, 255, 255, 0.3)';
 
   // Filtered certifications list with Search & Category
   const filteredCertifications = certifications.filter(cert => {
@@ -321,9 +384,18 @@ export default function App() {
           {/* Interactive Resume Drawer Trigger */}
           <button 
             onClick={() => setIsResumeOpen(true)}
-            className="bg-primary text-white text-xs font-semibold tracking-wider font-display px-5 py-2.5 rounded-full hover:scale-105 active:scale-95 transition-all shadow hover:shadow-lg hover:bg-primary/95"
+            className="bg-primary text-white text-xs font-semibold tracking-wider font-display px-5 py-2.5 rounded-full hover:scale-105 active:scale-95 transition-all shadow hover:shadow-lg hover:bg-primary/95 cursor-pointer"
           >
             Resume
+          </button>
+
+          {/* Secure Admin Gate trigger button */}
+          <button 
+            onClick={() => setIsAdminDashboardOpen(true)}
+            className="glass-card hover:border-primary text-on-surface-variant hover:text-primary p-2 rounded-full border border-black/10 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            title="Open Admin Command Center"
+          >
+            <Lock className="w-3.5 h-3.5" />
           </button>
         </nav>
 
@@ -377,9 +449,19 @@ export default function App() {
                 setIsMobileMenuOpen(false);
                 setIsResumeOpen(true);
               }}
-              className="bg-primary text-white text-sm font-semibold tracking-wider px-8 py-3 rounded-full mt-4 w-full"
+              className="bg-primary text-white text-sm font-semibold tracking-wider px-8 py-3 rounded-full mt-4 w-full cursor-pointer"
             >
               Open Resume
+            </button>
+
+            <button 
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                setIsAdminDashboardOpen(true);
+              }}
+              className="mt-2 bg-black/5 dark:bg-white/10 text-on-surface text-sm font-semibold tracking-wider px-8 py-2.5 rounded-full w-full flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <Lock className="w-3.5 h-3.5 text-primary" /> Admin Hub
             </button>
           </nav>
         </div>
@@ -406,7 +488,7 @@ export default function App() {
             className="max-w-4xl z-10 space-y-6"
           >
             <div 
-              style={{ backgroundColor: `rgba(255, 255, 255, ${glassOpacityValue})` }}
+              style={{ backgroundColor: glassBgColor }}
               className="inline-block px-4 py-1.5 glass-card rounded-full font-display text-xs font-semibold text-primary mb-4 border border-primary/20 cursor-default"
             >
               Available for New Opportunities
@@ -438,7 +520,7 @@ export default function App() {
  
               <button 
                 onClick={() => setIsResumeOpen(true)}
-                style={{ backgroundColor: `rgba(255, 255, 255, ${glassOpacityValue})` }}
+                style={{ backgroundColor: glassBgColor }}
                 className="glass-card text-on-surface text-sm font-semibold font-display px-7 py-3.5 rounded-lg hover:bg-black/5 active:scale-95 transition-all border border-black/5"
               >
                 Download Resume
@@ -476,7 +558,7 @@ export default function App() {
             
             {/* Bio Card */}
             <div 
-              style={{ backgroundColor: `rgba(255, 255, 255, ${glassOpacityValue})` }}
+              style={{ backgroundColor: glassBgColor }}
               className="glass-card specular-edge rounded-xl p-8 md:p-10 flex flex-col justify-between relative group shadow-sm hover:shadow-md border border-black/5"
             >
               <div className="absolute -top-10 -right-10 w-48 h-48 bg-primary-container/10 blur-[64px] rounded-full group-hover:bg-primary-container/15 transition-all duration-700 pointer-events-none" />
@@ -493,7 +575,7 @@ export default function App() {
                 {['Python', 'React.js', 'Django', 'AWS', 'UI/UX'].map((tag) => (
                   <span 
                     key={tag}
-                    style={{ backgroundColor: `rgba(255, 255, 255, ${glassOpacityValue - 0.1})` }}
+                    style={{ backgroundColor: glassBgColorMuted }}
                     className="glass-card px-3.5 py-1.5 rounded-full font-display text-[10px] uppercase tracking-wider font-semibold text-primary border border-primary/10 select-none"
                   >
                     {tag}
@@ -506,7 +588,7 @@ export default function App() {
             <div className="grid grid-cols-2 gap-6 font-display">
               
               <div 
-                style={{ backgroundColor: `rgba(255, 255, 255, ${glassOpacityValue})` }}
+                style={{ backgroundColor: glassBgColor }}
                 onMouseMove={handleCardMouseMove}
                 onMouseLeave={handleCardMouseLeave}
                 className="glass-card specular-edge p-6 rounded-xl text-center hover:scale-[1.02] shadow-sm flex flex-col justify-center items-center"
@@ -519,7 +601,7 @@ export default function App() {
               </div>
 
               <div 
-                style={{ backgroundColor: `rgba(255, 255, 255, ${glassOpacityValue})` }}
+                style={{ backgroundColor: glassBgColor }}
                 onMouseMove={handleCardMouseMove}
                 onMouseLeave={handleCardMouseLeave}
                 className="glass-card specular-edge p-6 rounded-xl text-center hover:scale-[1.02] shadow-sm flex flex-col justify-center items-center"
@@ -532,7 +614,7 @@ export default function App() {
               </div>
 
               <div 
-                style={{ backgroundColor: `rgba(255, 255, 255, ${glassOpacityValue})` }}
+                style={{ backgroundColor: glassBgColor }}
                 onMouseMove={handleCardMouseMove}
                 onMouseLeave={handleCardMouseLeave}
                 className="glass-card specular-edge p-6 rounded-xl text-center hover:scale-[1.02] shadow-sm flex flex-col justify-center items-center"
@@ -545,7 +627,7 @@ export default function App() {
               </div>
 
               <div 
-                style={{ backgroundColor: `rgba(255, 255, 255, ${glassOpacityValue})` }}
+                style={{ backgroundColor: glassBgColor }}
                 onMouseMove={handleCardMouseMove}
                 onMouseLeave={handleCardMouseLeave}
                 className="glass-card specular-edge p-6 rounded-xl text-center hover:scale-[1.02] shadow-sm flex flex-col justify-center items-center"
@@ -568,7 +650,7 @@ export default function App() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-120px" }}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          className="py-20 px-6 md:px-12 bg-[#ffffff]/35 backdrop-blur-sm border-y border-black/5"
+          className="py-20 px-6 md:px-12 bg-[#ffffff]/35 dark:bg-black/30 backdrop-blur-sm border-y border-black/5 dark:border-white/5"
         >
           <div className="max-w-6xl mx-auto">
             <h2 className="font-display text-4xl font-extrabold text-center text-on-surface mb-4">Technical Arsenal</h2>
@@ -580,7 +662,7 @@ export default function App() {
               {skillCategories.map((cat, i) => (
                 <div 
                   key={i}
-                  style={{ backgroundColor: `rgba(255, 255, 255, ${glassOpacityValue})` }}
+                  style={{ backgroundColor: glassBgColor }}
                   className="glass-card specular-edge p-6 rounded-xl space-y-4 shadow-sm border border-black/5"
                 >
                   <div className="flex items-center gap-3 border-b border-black/5 pb-3">
@@ -618,10 +700,10 @@ export default function App() {
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {projects.map((project) => (
+            {portfolioProjects.map((project) => (
               <div 
                 key={project.id}
-                style={{ backgroundColor: `rgba(255, 255, 255, ${glassOpacityValue})` }}
+                style={{ backgroundColor: glassBgColor }}
                 className="glass-card specular-edge rounded-xl overflow-hidden group shadow-sm hover:shadow-lg border border-black/5 flex flex-col justify-between"
               >
                 <div>
@@ -633,7 +715,7 @@ export default function App() {
                       src={project.image}
                       referrerPolicy="no-referrer"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-[#0a0f1d] via-transparent to-transparent pointer-events-none" />
                   </div>
 
                   <div className="p-6 md:p-8 space-y-4">
@@ -703,7 +785,7 @@ export default function App() {
 
           {/* Interactive control bar (Search & Filtration Pills) */}
           <div 
-            style={{ backgroundColor: `rgba(255, 255, 255, ${glassOpacityValue})` }}
+            style={{ backgroundColor: glassBgColor }}
             className="glass-card specular-edge p-4 rounded-xl flex flex-col md:flex-row gap-4 items-center justify-between border border-black/5"
           >
             {/* Filter pills */}
@@ -753,21 +835,21 @@ export default function App() {
           <div className="space-y-6">
             {majorCerts.length > 0 && (
               <div className="space-y-4">
-                <h3 className="font-display text-sm font-extrabold uppercase tracking-wider text-[#4457b3]">
+                <h3 className="font-display text-sm font-extrabold uppercase tracking-wider text-[#4457b3] dark:text-[#8b9dff]">
                   Core Specializations & Milestones
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {majorCerts.map((badge, index) => (
                     <div 
                       key={index}
-                      style={{ backgroundColor: `rgba(255, 255, 255, ${glassOpacityValue})` }}
+                      style={{ backgroundColor: glassBgColor }}
                       onMouseMove={handleCardMouseMove}
                       onMouseLeave={handleCardMouseLeave}
                       className="glass-card specular-edge p-6 rounded-xl flex flex-col justify-between hover:scale-[1.02] shadow-sm border border-black/5 transition-all group"
                     >
                       <div className="space-y-4">
                         <div className="flex items-start justify-between">
-                          <div className="bg-white/50 p-3 rounded-xl shadow-inner border border-black/5 group-hover:scale-105 transition-transform duration-300">
+                          <div className="bg-white/50 dark:bg-white/5 p-3 rounded-xl shadow-inner border border-black/5 dark:border-white/5 group-hover:scale-105 transition-transform duration-300">
                             {getIconComponent(badge.icon, "w-6 h-6")}
                           </div>
                           <span className="text-[9px] font-mono font-bold bg-[#006b5b]/10 text-primary px-2.5 py-0.5 rounded border border-primary/5 uppercase tracking-wider">
@@ -785,7 +867,7 @@ export default function App() {
                       </div>
 
                       {/* Footer Info & Verification link */}
-                      <div className="border-t border-black/5 mt-4 pt-3 flex items-center justify-between">
+                      <div className="border-t border-black/5 dark:border-white/5 mt-4 pt-3 flex items-center justify-between">
                         <span className="text-[10px] text-on-surface-variant/75 font-mono">
                           {badge.date || '2025'}
                         </span>
@@ -805,7 +887,7 @@ export default function App() {
                           </a>
                         ) : (
                           badge.code && badge.issuer === 'Simplilearn' && (
-                            <span className="text-[10px] text-[#4457b3] font-bold font-display">
+                            <span className="text-[10px] text-[#4457b3] dark:text-[#8b9dff] font-bold font-display">
                               Verified
                             </span>
                           )
@@ -848,11 +930,11 @@ export default function App() {
                   {minorCerts.map((badge, index) => (
                     <div 
                       key={index}
-                      style={{ backgroundColor: `rgba(255, 255, 255, ${glassOpacityValue})` }}
-                      className="glass-card specular-edge p-4 rounded-xl flex flex-col justify-between hover:border-primary/20 shadow-sm border border-black/5 transition-all h-full"
+                      style={{ backgroundColor: glassBgColor }}
+                      className="glass-card specular-edge p-4 rounded-xl flex flex-col justify-between hover:border-primary/20 shadow-sm border border-black/5 dark:border-white/5 transition-all h-full"
                     >
                       <div className="flex gap-3 items-start">
-                        <div className="bg-white/45 p-2 rounded-lg border border-black/5 shrink-0 mt-0.5">
+                        <div className="bg-white/45 dark:bg-white/5 p-2 rounded-lg border border-black/5 dark:border-white/5 shrink-0 mt-0.5">
                           {getIconComponent(badge.icon, "w-4 h-4")}
                         </div>
                         <div className="space-y-0.5 min-w-0">
@@ -862,13 +944,13 @@ export default function App() {
                           <p className="text-[11px] text-on-surface-variant/90 leading-snug line-clamp-1">
                             {badge.subtitle}
                           </p>
-                          <p className="text-[10px] font-semibold text-[#4457b3] font-display flex items-center gap-1 pt-0.5">
+                          <p className="text-[10px] font-semibold text-[#4457b3] dark:text-[#8b9dff] font-display flex items-center gap-1 pt-0.5">
                             {badge.issuer} &bull; <span className="text-on-surface-variant/60 font-medium">{badge.date}</span>
                           </p>
                         </div>
                       </div>
 
-                      <div className="border-t border-black/5 mt-3 pt-2 flex items-center justify-between text-[10px] font-mono text-on-surface-variant/65">
+                      <div className="border-t border-black/5 dark:border-white/5 mt-3 pt-2 flex items-center justify-between text-[10px] font-mono text-on-surface-variant/65">
                         <span>ID: {badge.code || 'GL-Verify'}</span>
                         {badge.verifyUrl ? (
                           <a 
@@ -888,7 +970,7 @@ export default function App() {
                 </div>
               ) : (
                 /* Sleek compact mini preview when closed to fulfill 'short down it' */
-                <div className="bg-white/20 border border-black/5 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="bg-white/20 dark:bg-black/30 border border-black/5 dark:border-white/5 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <div className="bg-primary/10 p-2.5 rounded-full text-primary shrink-0">
                       <Award className="w-5 h-5" />
@@ -915,8 +997,8 @@ export default function App() {
 
           {/* Zero states */}
           {filteredCertifications.length === 0 && (
-            <div className="text-center py-12 glass-card rounded-xl bg-white/40 border border-black/5 space-y-2">
-              <AlertCircle className="w-8 h-8 text-[#4457b3] mx-auto animate-pulse" />
+            <div className="text-center py-12 glass-card rounded-xl bg-white/40 dark:bg-zinc-900/40 border border-black/5 dark:border-white/5 space-y-2">
+              <AlertCircle className="w-8 h-8 text-[#4457b3] dark:text-[#8b9dff] mx-auto animate-pulse" />
               <h4 className="font-display font-extrabold text-on-surface">No Credentials Match Query</h4>
               <p className="text-xs text-on-surface-variant/85 max-w-xs mx-auto">
                 Try resetting filters or clear search characters to query over Shubham's comprehensive list.
@@ -945,7 +1027,7 @@ export default function App() {
         >
           
           <div 
-            style={{ backgroundColor: `rgba(255, 255, 255, ${glassOpacityValue})` }}
+            style={{ backgroundColor: glassBgColor }}
             className="glass-card specular-edge rounded-xl p-6 md:p-12 shadow-sm border border-black/5"
           >
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 font-display">
@@ -968,23 +1050,23 @@ export default function App() {
                       <Mail className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold text-[#4457b3] uppercase tracking-wider">Email</p>
+                      <p className="text-[10px] font-bold text-[#4457b3] dark:text-[#8b9dff] uppercase tracking-wider">Email</p>
                       <p className="text-sm font-bold text-on-surface">shelarshubham3236@gmail.com</p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-[#4457b3]/10 flex items-center justify-center text-[#4457b3]">
+                    <div className="w-12 h-12 rounded-full bg-[#4457b3]/10 dark:bg-[#8b9dff]/15 flex items-center justify-center text-[#4457b3] dark:text-[#8b9dff]">
                       <Phone className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold text-[#4457b3] uppercase tracking-wider">Phone</p>
+                      <p className="text-[10px] font-bold text-[#4457b3] dark:text-[#8b9dff] uppercase tracking-wider">Phone</p>
                       <p className="text-sm font-bold text-on-surface">+91 8600703236</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="text-[11px] text-[#4457b3] font-semibold leading-relaxed">
+                <div className="text-[11px] text-[#4457b3] dark:text-[#8b9dff] font-semibold leading-relaxed">
                   Active Region: Pune, Maharashtra, India. Supports hybrid and remote pipelines.
                 </div>
               </div>
@@ -1176,6 +1258,18 @@ export default function App() {
         <ResumeModal
           isOpen={isResumeOpen}
           onClose={() => setIsResumeOpen(false)}
+          dynamicResume={dynamicResume}
+        />
+      )}
+
+      {/* Dynamic portfolio admin control deck overlay */}
+      {isAdminDashboardOpen && (
+        <AdminDashboard
+          isOpen={isAdminDashboardOpen}
+          onClose={() => setIsAdminDashboardOpen(false)}
+          onProjectsUpdated={(updated) => setPortfolioProjects(updated)}
+          onResumeUpdated={(updated) => setDynamicResume(updated)}
+          currentProjects={portfolioProjects}
         />
       )}
 

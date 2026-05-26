@@ -31,29 +31,125 @@
         "createdAt"
       ]
     },
-    "suggested_repository": {
-      "title": "Suggested Repository",
-      "description": "A user suggested mock or showcase repository dynamically displayed on the portfolio",
+    "project_entity": {
+      "title": "Project",
+      "description": "An interactive portfolio showcase project",
       "type": "object",
       "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the project."
+        },
         "title": {
           "type": "string",
-          "description": "The name or title of the new repository."
+          "description": "Title of the project."
         },
         "description": {
           "type": "string",
-          "description": "The description details of the repository."
+          "description": "Description of the project."
         },
-        "createdAt": {
+        "image": {
+          "type": "string",
+          "description": "Image URL for the project thumbnail."
+        },
+        "githubUrl": {
+          "type": "string",
+          "description": "Optional GitHub URL."
+        },
+        "demoUrl": {
+          "type": "string",
+          "description": "Optional Live Demo URL."
+        },
+        "tags": {
+          "type": "array",
+          "description": "Tags of technologies used in the project."
+        },
+        "updatedAt": {
           "type": "string",
           "format": "date-time",
-          "description": "The timestamp indicating when the repository suggestion was submitted."
+          "description": "Timestamp when this project was last updated."
         }
       },
       "required": [
+        "id",
         "title",
         "description",
-        "createdAt"
+        "image",
+        "tags"
+      ]
+    },
+    "resume_entity": {
+      "title": "Resume Data",
+      "description": "Dynamic resume texts and fields",
+      "type": "object",
+      "properties": {
+        "fullName": {
+          "type": "string"
+        },
+        "tagline": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "phone": {
+          "type": "string"
+        },
+        "location": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "skillsLine": {
+          "type": "string",
+          "description": "Comma-separated list of languages & core skills."
+        },
+        "frameworksLine": {
+          "type": "string",
+          "description": "Comma-separated list of frameworks."
+        },
+        "cloudLine": {
+          "type": "string",
+          "description": "Comma-separated list of cloud technologies."
+        },
+        "dbLine": {
+          "type": "string",
+          "description": "Comma-separated database technologies."
+        },
+        "aiLine": {
+          "type": "string",
+          "description": "Comma-separated AI/LLM integrations used."
+        },
+        "toolsLine": {
+          "type": "string",
+          "description": "Comma-separated tools."
+        },
+        "featuredWorkText": {
+          "type": "string",
+          "description": "Customizable featured work experience markdown text or copy."
+        },
+        "educationText": {
+          "type": "string",
+          "description": "Customizable education experience markdown text or copy."
+        },
+        "certificationsList": {
+          "type": "array",
+          "description": "List of dynamic certifications."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "fullName",
+        "tagline",
+        "email",
+        "phone",
+        "location",
+        "summary",
+        "updatedAt"
       ]
     }
   },
@@ -62,9 +158,13 @@
       "schema": "contact",
       "description": "Collection of contact form messages."
     },
-    "/suggested_repositories/{repoId}": {
-      "schema": "suggested_repository",
-      "description": "Collection of user-suggested repository showcases."
+    "/projects/{projectId}": {
+      "schema": "project_entity",
+      "description": "Dynamic collection of showcase projects."
+    },
+    "/resume_config/{configId}": {
+      "schema": "resume_entity",
+      "description": "Singleton configuration config documents for resume information."
     }
   }
 }
