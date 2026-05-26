@@ -1,0 +1,70 @@
+{
+  "entities": {
+    "contact": {
+      "title": "Contact",
+      "description": "A contact form message submission",
+      "type": "object",
+      "properties": {
+        "fullName": {
+          "type": "string",
+          "description": "The full name of the sender."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The email address of the sender."
+        },
+        "message": {
+          "type": "string",
+          "description": "The message body sent by the sender."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp indicating when the message was submitted."
+        }
+      },
+      "required": [
+        "fullName",
+        "email",
+        "message",
+        "createdAt"
+      ]
+    },
+    "suggested_repository": {
+      "title": "Suggested Repository",
+      "description": "A user suggested mock or showcase repository dynamically displayed on the portfolio",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "The name or title of the new repository."
+        },
+        "description": {
+          "type": "string",
+          "description": "The description details of the repository."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp indicating when the repository suggestion was submitted."
+        }
+      },
+      "required": [
+        "title",
+        "description",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/contact_messages/{messageId}": {
+      "schema": "contact",
+      "description": "Collection of contact form messages."
+    },
+    "/suggested_repositories/{repoId}": {
+      "schema": "suggested_repository",
+      "description": "Collection of user-suggested repository showcases."
+    }
+  }
+}

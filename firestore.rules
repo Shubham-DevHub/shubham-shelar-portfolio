@@ -1,0 +1,61 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default catch-all deny rule for zero-trust
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper to validate document IDs against poisoning and injection
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Validator for Contact Messages entity matches blueprint
+    function isValidContact(data) {
+      return data.keys().hasAll(['fullName', 'email', 'message', 'createdAt'])
+        && data.keys().size() == 4
+        && data.fullName is string
+        && data.fullName.size() > 0
+        && data.fullName.size() <= 100
+        && data.email is string
+        && data.email.size() > 0
+        && data.email.size() <= 150
+        && data.email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$')
+        && data.message is string
+        && data.message.size() > 0
+        && data.message.size() <= 5000
+        && data.createdAt == request.time;
+    }
+
+    // Validator for Suggested Repositories matches blueprint
+    function isValidRepo(data) {
+      return data.keys().hasAll(['title', 'description', 'createdAt'])
+        && data.keys().size() == 3
+        && data.title is string
+        && data.title.size() > 0
+        && data.title.size() <= 100
+        && data.description is string
+        && data.description.size() > 0
+        && data.description.size() <= 2000
+        && data.createdAt == request.time;
+    }
+
+    // Rules for contact form collection
+    match /contact_messages/{messageId} {
+      // Allow creation only if schema validates, ID is secure, and createdAt is server time
+      allow create: if isValidId(messageId) && isValidContact(request.resource.data);
+      // No client is allowed to read, update or delete forms
+      allow read, update, delete: if false;
+    }
+
+    // Rules for suggested repositories collection
+    match /suggested_repositories/{repoId} {
+      // Allow creation only if schema validates, ID is secure, and createdAt is server time
+      allow create: if isValidId(repoId) && isValidRepo(request.resource.data);
+      // Allow read so visitors can see suggested repositories
+      allow read: if true;
+      allow update, delete: if false;
+    }
+  }
+}
