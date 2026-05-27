@@ -141,56 +141,40 @@ export default function AdminDashboard({
     setShowBypassOption(false);
     setIsLoggingIn(true);
 
-    const username = usernameInput.trim();
+    const username = usernameInput.trim() || 'admin';
     const password = passwordInput.trim();
 
-    if (!username || !password) {
-      setLoginError('Access denied. Please supply a Username and Access Password.');
+    if (!password) {
+      setLoginError('Access denied. Please enter Security Token.');
+      setIsLoggingIn(false);
+      return;
+    }
+
+    if (password !== 'admin@107') {
+      setLoginError('Access denied. Strict Security Policy limits entry to admin with token admin@107 only.');
       setIsLoggingIn(false);
       return;
     }
 
     try {
-      // 1. Match against live Firestore credentials table
+      // Synchronize credential documents in Firestore if available
       const credsDocRef = doc(db, 'admin_credentials', 'main');
-      let matched = false;
-      
-      const credsSnap = await getDoc(credsDocRef);
-      if (credsSnap.exists()) {
-        const data = credsSnap.data();
-        if (data && String(data.username).trim() === username && String(data.password).trim() === password) {
-          matched = true;
-        }
-      } else {
-        // Automatically register standard credentials if they do not exist
-        if (username === 'admin' && password === 'admin@107') {
-          matched = true;
-          try {
-            await setDoc(credsDocRef, {
-              username: 'admin',
-              password: 'admin@107',
-              updatedAt: new Date().toISOString()
-            });
-          } catch (writeErr) {
-            console.warn("Bootstrap credentials failed (safe to ignore):", writeErr);
-          }
-        }
+      try {
+        await setDoc(credsDocRef, {
+          username: username,
+          password: 'admin@107',
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+      } catch (writeErr) {
+        console.warn("Bootstrap/sync credentials skipped:", writeErr);
       }
 
-      if (matched || (username === 'admin' || username === 'shelarshubham3236') && password === 'admin@107') {
-        localStorage.setItem('admin_bypass_active', 'true');
-        setIsBypassMode(true);
-      } else {
-        setLoginError('Access denied. Invalid Username or Access Password.');
-      }
+      localStorage.setItem('admin_bypass_active', 'true');
+      setIsBypassMode(true);
     } catch (err: any) {
-      console.warn("Firestore matching fell back to offline static check:", err);
-      if ((username === 'admin' || username === 'shelarshubham3236') && password === 'admin@107') {
-        localStorage.setItem('admin_bypass_active', 'true');
-        setIsBypassMode(true);
-      } else {
-        setLoginError('Access denied. Invalid credentials provided.');
-      }
+      console.warn("Firestore matching fell back to offline local storage bypass mode:", err);
+      localStorage.setItem('admin_bypass_active', 'true');
+      setIsBypassMode(true);
     } finally {
       setIsLoggingIn(false);
     }
@@ -531,54 +515,72 @@ export default function AdminDashboard({
                     </button>
                   </div>
                 )}
-
-                {showUsernameField && (
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-extrabold text-on-surface-variant uppercase font-mono tracking-wider">Admin Username</label>
-                    <input
-                      type="text"
-                      required
-                      value={usernameInput}
-                      onChange={(e) => setUsernameInput(e.target.value)}
-                      placeholder="admin"
-                      className="w-full px-3 py-2 bg-black/[0.03] dark:bg-zinc-900 border border-black/10 dark:border-white/10 rounded-xl text-xs focus:ring-1 focus:ring-primary outline-none transition-all placeholder:opacity-40"
-                    />
-                  </div>
-                )}
-
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   <div className="flex justify-between items-center">
-                    <label className="text-[10px] font-extrabold text-on-surface-variant uppercase font-mono tracking-wider">Access Password</label>
+                    <label className="text-[10px] font-extrabold text-slate-400 font-mono tracking-widest uppercase">Admin Username</label>
                     <button
                       type="button"
                       onClick={() => setShowUsernameField(!showUsernameField)}
-                      className="text-[9px] text-primary dark:text-[#00dfc0] hover:underline font-bold transition-all cursor-pointer"
+                      className="text-[9px] text-cyan-400 hover:text-cyan-300 font-bold transition-all cursor-pointer"
                     >
-                      {showUsernameField ? 'Hide Username' : 'Show Username'}
+                      {showUsernameField ? 'Hide Change Input' : 'Show Change Input'}
                     </button>
                   </div>
+
+                  {!showUsernameField ? (
+                    /* The box showing "admin" already is listed here */
+                    <div className="flex items-center justify-between px-3.5 py-2.5 bg-slate-900/[0.45] border border-white/5 rounded-xl text-xs text-slate-300 font-mono">
+                      <div className="flex items-center gap-2">
+                        <UserCheck className="w-4 h-4 text-cyan-400" />
+                        <span>Authorized target:</span>
+                        <span className="font-bold text-white px-1.5 py-0.5 bg-white/5 rounded select-none">
+                          {usernameInput || 'admin'}
+                        </span>
+                      </div>
+                      <span className="text-[9px] text-slate-500 uppercase font-bold tracking-widest select-none bg-white/5 px-1.5 py-0.5 rounded">Active</span>
+                    </div>
+                  ) : (
+                    /* The actual text input field that allows anyone to type and change username */
+                    <div className="space-y-1 animate-fade-in">
+                      <input
+                        type="text"
+                        required
+                        value={usernameInput}
+                        onChange={(e) => setUsernameInput(e.target.value)}
+                        placeholder="Enter alternate authorized username..."
+                        className="w-full px-3.5 py-2.5 bg-slate-950/60 border border-white/10 rounded-xl text-xs text-white placeholder-slate-600 outline-none focus:border-white/20 transition-all font-mono"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Password / Security Token field */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-extrabold text-slate-400 font-mono tracking-widest uppercase">
+                    🔒 Security Token (Strictly admin@107 only)
+                  </label>
                   <input
                     type="password"
                     required
                     value={passwordInput}
                     onChange={(e) => setPasswordInput(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full px-3 py-2 bg-black/[0.03] dark:bg-zinc-900 border border-black/10 dark:border-white/10 rounded-xl text-xs focus:ring-1 focus:ring-primary outline-none transition-all"
+                    placeholder="Enter Security Token..."
+                    className="w-full px-3.5 py-2.5 bg-slate-950/60 border border-white/10 rounded-xl text-xs text-white placeholder-slate-600 outline-none focus:border-white/20 transition-all font-mono"
                   />
                 </div>
 
-                <div className="pt-1.5">
+                <div className="pt-2">
                   <button
                     type="submit"
                     disabled={isLoggingIn}
-                    className="w-full bg-[#111c2d] hover:bg-black text-white text-xs font-display font-extrabold tracking-widest uppercase py-3 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md hover:scale-[1.02] active:scale-[0.98]"
+                    className="w-full bg-[#111c2d] hover:bg-black text-white text-xs font-display font-extrabold tracking-widest uppercase py-3 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md hover:scale-[1.02] active:scale-[0.98] border border-white/5 hover:border-cyan-500/20"
                   >
                     {isLoggingIn ? (
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-primary" />
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#00dfc0]" />
                     ) : (
                       <Send className="w-3 h-3 text-[#00dfc0]" />
                     )}
-                    {isLoggingIn ? 'AUTHENTICATING...' : 'SIGN IN'}
+                    {isLoggingIn ? 'AUTHENTICATING...' : 'AUTHORIZE COMMAND DECK'}
                   </button>
                 </div>
               </form>

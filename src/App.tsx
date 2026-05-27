@@ -66,20 +66,28 @@ export default function App() {
   }, []);
 
   // Navigation & UI States
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-    const saved = localStorage.getItem('theme');
-    return saved === 'dark';
+  const [neonStyle, setNeonStyle] = useState<'cyan' | 'purple'>(() => {
+    const saved = localStorage.getItem('neon_style');
+    return saved === 'purple' ? 'purple' : 'cyan';
   });
 
+  const isDarkMode = true;
+
   useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [isDarkMode]);
+    document.documentElement.classList.add('dark');
+    localStorage.setItem('theme', 'dark');
+    localStorage.setItem('neon_style', neonStyle);
+  }, [neonStyle]);
+
+  // Cursor coordinate tracking for dynamic light aura
+  const [mousePos, setMousePos] = useState({ x: -1000, y: -1000 });
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePos({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [currentSection, setCurrentSection] = useState('hero');
@@ -264,30 +272,32 @@ export default function App() {
   };
 
   const toggleDarkMode = () => {
-    setIsDarkMode(prev => !prev);
+    setNeonStyle(prev => prev === 'cyan' ? 'purple' : 'cyan');
   };
 
   // Map icons from dynamic categories string mapping safely to Lucide icons
   const getIconComponent = (iconName: string, sizeClass: string = "w-6 h-6") => {
+    const mainColor = neonStyle === 'cyan' ? 'text-cyan-400' : 'text-fuchsia-400';
+    const subColor = neonStyle === 'cyan' ? 'text-blue-400' : 'text-purple-400';
     switch (iconName) {
-      case 'Monitor': return <Monitor className={`${sizeClass} text-primary`} />;
-      case 'Code': return <Code className={`${sizeClass} text-secondary`} />;
-      case 'Cloud': return <Cloud className={`${sizeClass} text-[#01dfc0]`} />;
-      case 'Database': return <Database className={`${sizeClass} text-indigo-500`} />;
-      case 'Wrench': return <Wrench className={`${sizeClass} text-amber-500`} />;
-      case 'Zap': return <Zap className={`${sizeClass} text-[#01dfc0]`} />;
-      case 'CheckCircle2': return <CheckCircle2 className="w-12 h-12 text-primary" />;
-      case 'CloudDownload': return <Cloud className="w-12 h-12 text-[#4457b3]" />;
-      case 'Sparkles': return <Sparkles className={`${sizeClass} text-[#00dfc0]`} />;
-      case 'Brain': return <Brain className={`${sizeClass} text-emerald-500`} />;
-      case 'Award': return <Award className={`${sizeClass} text-yellow-500`} />;
-      case 'Cpu': return <Cpu className={`${sizeClass} text-cyan-500`} />;
-      case 'Terminal': return <Terminal className={`${sizeClass} text-rose-500`} />;
-      case 'Search': return <Search className={`${sizeClass} text-sky-500`} />;
-      case 'Megaphone': return <Megaphone className={`${sizeClass} text-orange-500`} />;
-      case 'Activity': return <Activity className={`${sizeClass} text-violet-500`} />;
-      case 'Users': return <Users className={`${sizeClass} text-teal-500`} />;
-      default: return <Sparkles className={`${sizeClass} text-primary`} />;
+      case 'Monitor': return <Monitor className={`${sizeClass} ${mainColor}`} />;
+      case 'Code': return <Code className={`${sizeClass} ${subColor}`} />;
+      case 'Cloud': return <Cloud className={`${sizeClass} text-cyan-400`} />;
+      case 'Database': return <Database className={`${sizeClass} text-blue-400`} />;
+      case 'Wrench': return <Wrench className={`${sizeClass} text-slate-400`} />;
+      case 'Zap': return <Zap className={`${sizeClass} ${mainColor} animate-pulse`} />;
+      case 'CheckCircle2': return <CheckCircle2 className={`w-12 h-12 ${mainColor}`} />;
+      case 'CloudDownload': return <Cloud className={`w-12 h-12 ${subColor} animate-bounce-slow`} />;
+      case 'Sparkles': return <Sparkles className={`${sizeClass} ${mainColor} animate-pulse`} />;
+      case 'Brain': return <Brain className={`${sizeClass} text-purple-400`} />;
+      case 'Award': return <Award className={`${sizeClass} text-yellow-400`} />;
+      case 'Cpu': return <Cpu className={`${sizeClass} text-rose-400 animate-pulse`} />;
+      case 'Terminal': return <Terminal className={`${sizeClass} text-slate-300 font-mono`} />;
+      case 'Search': return <Search className={`${sizeClass} text-sky-400`} />;
+      case 'Megaphone': return <Megaphone className={`${sizeClass} text-orange-400`} />;
+      case 'Activity': return <Activity className={`${sizeClass} text-emerald-400`} />;
+      case 'Users': return <Users className={`${sizeClass} text-teal-400`} />;
+      default: return <Sparkles className={`${sizeClass} ${mainColor}`} />;
     }
   };
 
@@ -300,10 +310,10 @@ export default function App() {
     }
   };
 
-  const glassOpacityValue = isDarkMode ? 0.25 : 0.4;
-  const glassBlurValue = isDarkMode ? 'blur(20px)' : 'blur(12px)';
-  const glassBgColor = isDarkMode ? 'rgba(10, 15, 29, 0.75)' : 'rgba(255, 255, 255, 0.4)';
-  const glassBgColorMuted = isDarkMode ? 'rgba(10, 15, 29, 0.45)' : 'rgba(255, 255, 255, 0.3)';
+  const glassOpacityValue = 0.15;
+  const glassBlurValue = 'blur(24px)';
+  const glassBgColor = 'rgba(10, 15, 30, 0.455)';
+  const glassBgColorMuted = 'rgba(10, 15, 30, 0.25)';
 
   // Filtered certifications list with Search & Category
   const filteredCertifications = certifications.filter(cert => {
@@ -325,58 +335,79 @@ export default function App() {
   const minorCerts = filteredCertifications.filter(c => !c.isMajor);
 
   return (
-    <div className="bg-background min-h-screen text-on-surface font-sans selection:bg-primary-container selection:text-on-primary-container relative">
+    <div className="bg-background min-h-screen text-on-surface font-sans selection:bg-slate-800 selection:text-cyan-400 relative">
       
       {/* Background system & particles canvas */}
-      <BackgroundPhysics opacity={glassOpacityValue} scrollY={scrollY} />
+      <BackgroundPhysics opacity={glassOpacityValue} scrollY={scrollY} neonStyle={neonStyle} />
+
+      {/* Global Cursor Glow Aura (Desktop only) */}
+      <div className="cursor-highlight-container hidden md:block">
+        <div 
+          className="cursor-glow"
+          style={{ 
+            left: `${mousePos.x}px`, 
+            top: `${mousePos.y}px`,
+            background: neonStyle === 'cyan'
+              ? 'radial-gradient(circle, rgba(6, 182, 212, 0.12) 0%, rgba(59, 130, 246, 0.03) 50%, rgba(0, 0, 0, 0) 75%)'
+              : 'radial-gradient(circle, rgba(168, 85, 247, 0.12) 0%, rgba(236, 72, 153, 0.03) 50%, rgba(0, 0, 0, 0) 75%)'
+          }}
+        />
+      </div>
 
       {/* Scroll indicator bar */}
       <div 
-        className="fixed top-0 left-0 h-[2px] bg-gradient-to-r from-[#00dfc0] via-[#006b5b] to-[#4457b3] z-[101] transition-all duration-100" 
-        style={{ width: `${scrollProgress}%` }} 
+        className="fixed top-0 left-0 h-[3px] z-[101] transition-all duration-100" 
+        style={{ 
+          width: `${scrollProgress}%`,
+          background: neonStyle === 'cyan'
+            ? 'linear-gradient(90deg, #06b6d4, #3b82f6)'
+            : 'linear-gradient(90deg, #a855f7, #ec4899)'
+        }} 
       />
 
-      {/* TopAppBar Navigation Header */}
+      {/* TopAppBar Navigation Header - Premium Capsule Bubble style */}
       <header 
-        style={{ backdropFilter: glassBlurValue }}
-        className="fixed top-0 w-full z-50 flex justify-between items-center px-6 md:px-12 py-4 border-b border-black/5 bg-[#ffffff]/10 transition-all duration-300"
+        className="fixed top-5 left-1/2 -translate-x-1/2 w-[90%] max-w-5xl z-50 flex justify-between items-center px-6 md:px-8 py-3 rounded-full border border-white/10 bg-black/40 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-500"
       >
         <div 
           onClick={() => handleScrollToSection('hero')}
-          className="font-display text-2xl font-bold text-primary tracking-tighter cursor-pointer hover:opacity-85 transition-opacity"
+          className="font-display text-xl font-bold text-white tracking-widest cursor-pointer hover:opacity-85 transition-opacity flex items-center gap-1.5"
         >
-          Shubham Shelar
+          <span className={`w-2.5 h-2.5 rounded-full ${neonStyle === 'cyan' ? 'bg-[#06b6d4]' : 'bg-[#a855f7]'} animate-pulse`} />
+          SHUBHAM
         </div>
 
         {/* Desktop Navigation Links */}
-        <nav className="hidden md:flex gap-8 items-center font-display">
+        <nav className="hidden md:flex gap-6 items-center font-display">
           {['projects', 'skills', 'certifications', 'contact'].map((item) => (
             <button
               key={item}
               onClick={() => handleScrollToSection(item)}
-              className={`text-xs font-semibold uppercase tracking-wider transition-colors duration-300 hover:text-primary ${
-                currentSection === item ? 'text-primary' : 'text-on-surface-variant'
+              className={`text-[11px] font-bold uppercase tracking-widest transition-colors duration-300 hover:text-white cursor-pointer ${
+                currentSection === item 
+                  ? (neonStyle === 'cyan' ? 'text-[#06b6d4]' : 'text-[#a855f7]') 
+                  : 'text-slate-400'
               }`}
             >
               {item}
             </button>
           ))}
 
-          {/* Dark / Light mode toggle */}
+          {/* Cyber Dual Ambient mode toggle */}
           <button
             onClick={toggleDarkMode}
-            className="glass-card flex items-center gap-2 px-3 py-1.5 rounded-full border border-black/10 hover:border-primary transition-all active:scale-95 text-xs text-on-surface cursor-pointer select-none"
-            title="Toggle color theme"
+            className="group flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 hover:border-white/20 bg-white/5 transition-all active:scale-95 text-[10px] font-bold text-slate-300 cursor-pointer select-none"
+            title="Toggle cyber ambient glow"
           >
-            {isDarkMode ? (
+            {neonStyle === 'cyan' ? (
               <>
-                <Sun className="w-4 h-4 text-amber-500 fill-amber-500/20" />
-                <span className="font-bold tracking-widest text-[10px]">THEME: LIGHT</span>
+                <Sparkles className="w-3 h-3 text-cyan-400 group-hover:rotate-12 transition-transform" />
+                <span className="tracking-wider">AEON CYAN</span>
               </>
             ) : (
               <>
-                <Moon className="w-4 h-4 text-primary" />
-                <span className="font-bold tracking-widest text-[10px]">THEME: DARK</span>
+                <Sparkles className="w-3 h-3 text-fuchsia-400 group-hover:rotate-12 transition-transform" />
+                <span className="tracking-wider">VOID PURPLE</span>
               </>
             )}
           </button>
@@ -384,7 +415,11 @@ export default function App() {
           {/* Interactive Resume Drawer Trigger */}
           <button 
             onClick={() => setIsResumeOpen(true)}
-            className="bg-primary text-white text-xs font-semibold tracking-wider font-display px-5 py-2.5 rounded-full hover:scale-105 active:scale-95 transition-all shadow hover:shadow-lg hover:bg-primary/95 cursor-pointer"
+            className={`text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-full transition-all active:scale-95 text-white cursor-pointer ${
+              neonStyle === 'cyan' 
+                ? 'bg-[#06b6d4] hover:bg-[#0891b2] hover:shadow-[0_0_20px_rgba(6,182,212,0.4)]' 
+                : 'bg-[#a855f7] hover:bg-[#8b5cf6] hover:shadow-[0_0_20px_rgba(168,85,247,0.4)]'
+            }`}
           >
             Resume
           </button>
@@ -392,7 +427,7 @@ export default function App() {
           {/* Secure Admin Gate trigger button */}
           <button 
             onClick={() => setIsAdminDashboardOpen(true)}
-            className="glass-card hover:border-primary text-on-surface-variant hover:text-primary p-2 rounded-full border border-black/10 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            className="p-2 rounded-full border border-white/10 hover:border-white/25 bg-[#0a0f1d]/50 hover:scale-105 active:scale-95 transition-all text-slate-400 hover:text-white cursor-pointer"
             title="Open Admin Command Center"
           >
             <Lock className="w-3.5 h-3.5" />
@@ -402,22 +437,26 @@ export default function App() {
         {/* Mobile menu panel trigger icon */}
         <button 
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="md:hidden text-primary p-1 hover:bg-black/5 rounded-full transition-colors"
+          className={`md:hidden p-1.5 rounded-full bg-white/5 border border-white/10 transition-all ${
+            neonStyle === 'cyan' ? 'text-cyan-400' : 'text-fuchsia-400'
+          }`}
         >
-          {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
       </header>
 
       {/* Mobile Drawer Navigation Backdrop and Panel */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-40 md:hidden flex flex-col pt-20 bg-background/95 backdrop-blur-xl">
+        <div className="fixed inset-0 z-40 md:hidden flex flex-col pt-24 bg-slate-950/95 backdrop-blur-2xl">
           <nav className="flex flex-col gap-6 p-8 items-center text-center font-display">
             {['projects', 'skills', 'certifications', 'contact'].map((item) => (
               <button
                 key={item}
                 onClick={() => handleScrollToSection(item)}
                 className={`text-lg font-bold uppercase tracking-widest ${
-                  currentSection === item ? 'text-primary' : 'text-on-surface'
+                  currentSection === item 
+                    ? (neonStyle === 'cyan' ? 'text-cyan-400' : 'text-fuchsia-400') 
+                    : 'text-slate-300'
                 }`}
               >
                 {item}
@@ -429,17 +468,17 @@ export default function App() {
                 toggleDarkMode();
                 setIsMobileMenuOpen(false);
               }}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/40 dark:bg-white/10 border border-black/10 mt-4"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/5 border border-white/10 mt-4 text-xs font-bold text-slate-300"
             >
-              {isDarkMode ? (
+              {neonStyle === 'cyan' ? (
                 <>
-                  <Sun className="w-4 h-4 text-amber-500" />
-                  <span className="text-xs font-semibold text-on-surface">Switch to Light Mode</span>
+                  <Sparkles className="w-4 h-4 text-cyan-400" />
+                  <span>Switch to Void Purple</span>
                 </>
               ) : (
                 <>
-                  <Moon className="w-4 h-4 text-primary" />
-                  <span className="text-xs font-semibold text-on-surface">Switch to Dark Mode</span>
+                  <Sparkles className="w-4 h-4 text-fuchsia-400" />
+                  <span>Switch to Aeon Cyan</span>
                 </>
               )}
             </button>
@@ -449,7 +488,9 @@ export default function App() {
                 setIsMobileMenuOpen(false);
                 setIsResumeOpen(true);
               }}
-              className="bg-primary text-white text-sm font-semibold tracking-wider px-8 py-3 rounded-full mt-4 w-full cursor-pointer"
+              className={`text-sm font-bold tracking-widest uppercase px-8 py-3 rounded-full mt-4 w-full cursor-pointer text-white ${
+                neonStyle === 'cyan' ? 'bg-[#06b6d4]' : 'bg-[#a855f7]'
+              }`}
             >
               Open Resume
             </button>
@@ -459,7 +500,7 @@ export default function App() {
                 setIsMobileMenuOpen(false);
                 setIsAdminDashboardOpen(true);
               }}
-              className="mt-2 bg-black/5 dark:bg-white/10 text-on-surface text-sm font-semibold tracking-wider px-8 py-2.5 rounded-full w-full flex items-center justify-center gap-1.5 cursor-pointer"
+              className="mt-2 bg-white/5 border border-white/10 text-slate-300 text-sm font-semibold tracking-wider px-8 py-2.5 rounded-full w-full flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <Lock className="w-3.5 h-3.5 text-primary" /> Admin Hub
             </button>
@@ -468,69 +509,81 @@ export default function App() {
       )}
 
       {/* Main Container Hero */}
-      <main className="pt-20">
+      <main className="pt-28">
         
         {/* HERO SECTION */}
         <section 
           id="hero" 
-          className="relative min-h-[92vh] flex flex-col justify-center items-center px-6 md:px-12 text-center overflow-hidden"
+          className="relative min-h-[90vh] flex flex-col justify-center items-center px-6 md:px-12 text-center overflow-hidden"
         >
           {/* Beautiful modern interactive ambient mesh particles & soft float glows */}
-          <HeroInteractiveMesh isDarkMode={isDarkMode} />
+          <HeroInteractiveMesh isDarkMode={true} />
 
           {/* Clean ambient radial gradient overlay to soften edges further */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/40 to-background -z-10 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#030712]/30 to-[#030712] -z-10 pointer-events-none" />
 
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="max-w-4xl z-10 space-y-6"
+            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+            className="max-w-4xl z-10 space-y-8"
           >
             <div 
-              style={{ backgroundColor: glassBgColor }}
-              className="inline-block px-4 py-1.5 glass-card rounded-full font-display text-xs font-semibold text-primary mb-4 border border-primary/20 cursor-default"
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)' }}
+              className={`inline-flex items-center gap-2 px-4 py-1.5 glass-card rounded-full font-display text-xs font-semibold tracking-wider mb-2 border ${
+                neonStyle === 'cyan' ? 'border-cyan-400/20 text-cyan-400' : 'border-fuchsia-400/20 text-fuchsia-400'
+              } cursor-default`}
             >
+              <span className={`w-2 h-2 rounded-full ${neonStyle === 'cyan' ? 'bg-cyan-400' : 'bg-fuchsia-400'} animate-pulse`} />
               Available for New Opportunities
             </div>
             
-            <h1 className="font-display text-4xl md:text-[54px] lg:text-[64px] font-extrabold text-on-surface leading-tight tracking-tight">
-              Crafting the Future with <br className="hidden sm:inline" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-[#00dfc0] to-secondary">
+            <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-extrabold text-white leading-[1.05] tracking-tight text-glow">
+              Engineering <br />
+              <span className={`text-transparent bg-clip-text bg-gradient-to-r ${
+                neonStyle === 'cyan' 
+                  ? 'from-cyan-400 via-sky-400 to-blue-500' 
+                  : 'from-fuchsia-400 via-purple-500 to-indigo-500'
+              } animate-pulse-slow`}>
                 Liquid Intelligence
               </span>
             </h1>
  
-            <p className="font-display text-lg md:text-2xl font-semibold text-on-surface-variant max-w-2xl mx-auto">
-              Computer Science Graduate | Full Stack Developer | AI Developer
+            <p className="font-display text-lg md:text-2xl font-bold tracking-wide text-slate-300 max-w-2xl mx-auto">
+              Computer Science Graduate & Full Stack AI Developer
             </p>
  
-            <p className="text-sm md:text-base text-on-surface-variant/80 max-w-xl mx-auto leading-relaxed">
-              Building scalable web applications, AI-powered products, and modern digital experiences with a focus on high-performance code and elegant UI.
+            <p className="text-sm md:text-base text-slate-400 max-w-xl mx-auto leading-relaxed">
+              Designing interfaces inspired by Apple Vision Pro and Linear. Scaling fast Python backends, high-performance local AI endpoints, and interactive React applications.
             </p>
  
             {/* Micro button layout triggers */}
-            <div className="flex flex-wrap justify-center items-center gap-4 mt-8">
+            <div className="flex flex-wrap justify-center items-center gap-4 pt-4">
               <button 
                 onClick={() => handleScrollToSection('projects')}
-                className="bg-primary hover:bg-primary-container hover:text-on-primary-container text-white text-sm font-semibold font-display px-7 py-3.5 rounded-lg primary-glow hover:scale-105 active:scale-95 transition-all"
+                className={`relative px-7 py-3.5 rounded-full font-bold font-display text-xs uppercase tracking-widest text-white shadow-2xl transition-all hover:scale-105 active:scale-95 duration-300 cursor-pointer ${
+                  neonStyle === 'cyan' 
+                    ? 'bg-cyan-500 hover:bg-cyan-600 hover:shadow-[0_0_25px_rgba(6,182,212,0.4)]' 
+                    : 'bg-fuchsia-500 hover:bg-fuchsia-600 hover:shadow-[0_0_25px_rgba(168,85,247,0.4)]'
+                }`}
               >
                 View Projects
               </button>
  
               <button 
                 onClick={() => setIsResumeOpen(true)}
-                style={{ backgroundColor: glassBgColor }}
-                className="glass-card text-on-surface text-sm font-semibold font-display px-7 py-3.5 rounded-lg hover:bg-black/5 active:scale-95 transition-all border border-black/5"
+                className="glass-card text-white text-xs font-bold font-display uppercase tracking-widest px-7 py-3.5 rounded-full bg-white/5 hover:bg-white/10 active:scale-95 transition-all border border-white/10 cursor-pointer"
               >
                 Download Resume
               </button>
  
               <button 
                 onClick={() => handleScrollToSection('contact')}
-                className="text-on-surface-variant hover:text-primary transition-colors text-xs font-bold tracking-widest font-display flex items-center gap-2 ml-2"
+                className={`transition-colors text-xs font-bold tracking-widest font-display flex items-center gap-2 ml-2 hover:text-white cursor-pointer ${
+                  neonStyle === 'cyan' ? 'text-cyan-400' : 'text-fuchsia-400'
+                }`}
               >
-                Contact Me <ArrowRight className="w-4 h-4 text-primary animate-pulse" />
+                Contact Me <ArrowRight className="w-4 h-4 animate-pulse" />
               </button>
             </div>
 
@@ -538,10 +591,12 @@ export default function App() {
  
           <div 
             onClick={() => handleScrollToSection('about')}
-            className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce cursor-pointer opacity-50 hover:opacity-100 transition-opacity"
+            className={`absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce cursor-pointer opacity-50 hover:opacity-100 transition-opacity ${
+              neonStyle === 'cyan' ? 'text-cyan-400' : 'text-fuchsia-400'
+            }`}
             title="Read About Me"
           >
-            <ChevronDown className="w-8 h-8 text-primary" />
+            <ChevronDown className="w-8 h-8" />
           </div>
         </section>
 
@@ -552,20 +607,22 @@ export default function App() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-120px" }}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          className="py-20 px-6 md:px-12 max-w-6xl mx-auto"
+          className="py-24 px-6 md:px-12 max-w-6xl mx-auto"
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-stretch">
             
             {/* Bio Card */}
             <div 
-              style={{ backgroundColor: glassBgColor }}
-              className="glass-card specular-edge rounded-xl p-8 md:p-10 flex flex-col justify-between relative group shadow-sm hover:shadow-md border border-black/5"
+              style={{ backgroundColor: 'rgba(10, 15, 30, 0.3)' }}
+              className="glass-card specular-edge rounded-2xl p-8 md:p-10 flex flex-col justify-between relative group border border-white/10"
             >
-              <div className="absolute -top-10 -right-10 w-48 h-48 bg-primary-container/10 blur-[64px] rounded-full group-hover:bg-primary-container/15 transition-all duration-700 pointer-events-none" />
+              <div className={`absolute -top-10 -right-10 w-48 h-48 blur-[72px] rounded-full transition-all duration-700 pointer-events-none ${
+                neonStyle === 'cyan' ? 'bg-cyan-500/10 group-hover:bg-cyan-500/20' : 'bg-fuchsia-500/15 group-hover:bg-fuchsia-500/25'
+              }`} />
               
               <div>
-                <h2 className="font-display text-4xl font-extrabold text-on-surface mb-6">About Me</h2>
-                <p className="text-sm md:text-base text-on-surface-variant leading-relaxed mb-6">
+                <h2 className="font-display text-4xl font-extrabold text-white tracking-tight mb-6">About Me</h2>
+                <p className="text-sm md:text-base text-slate-300 leading-relaxed mb-6">
                   I am a Computer Science graduate with a strong technical foundation in scalable software development and AI tools. My passion lies in creating systems that are not only efficient but also intuitive. I specialize in bridging the gap between complex backend logic and sleek, modern user interfaces.
                 </p>
               </div>
@@ -575,8 +632,9 @@ export default function App() {
                 {['Python', 'React.js', 'Django', 'AWS', 'UI/UX'].map((tag) => (
                   <span 
                     key={tag}
-                    style={{ backgroundColor: glassBgColorMuted }}
-                    className="glass-card px-3.5 py-1.5 rounded-full font-display text-[10px] uppercase tracking-wider font-semibold text-primary border border-primary/10 select-none"
+                    className={`px-3.5 py-1.5 rounded-full font-display text-[10px] uppercase tracking-wider font-bold border bg-white/5 select-none ${
+                      neonStyle === 'cyan' ? 'border-cyan-500/20 text-cyan-400' : 'border-fuchsia-500/20 text-fuchsia-400'
+                    }`}
                   >
                     {tag}
                   </span>
@@ -588,55 +646,67 @@ export default function App() {
             <div className="grid grid-cols-2 gap-6 font-display">
               
               <div 
-                style={{ backgroundColor: glassBgColor }}
+                style={{ backgroundColor: 'rgba(10, 15, 30, 0.3)' }}
                 onMouseMove={handleCardMouseMove}
                 onMouseLeave={handleCardMouseLeave}
-                className="glass-card specular-edge p-6 rounded-xl text-center hover:scale-[1.02] shadow-sm flex flex-col justify-center items-center"
+                className={`glass-card specular-edge p-6 rounded-2xl text-center hover:scale-[1.03] flex flex-col justify-center items-center border border-white/5 transition-all ${
+                  neonStyle === 'cyan' ? 'hover:border-cyan-500/30 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)]' : 'hover:border-fuchsia-500/30 hover:shadow-[0_0_20px_rgba(168,85,247,0.15)]'
+                }`}
               >
-                <div className="text-primary mb-3 bg-[#006b5b]/10 p-3 rounded-full">
-                  <Code className="w-6 h-6" />
+                <div className={`mb-3 p-3 rounded-full border bg-white/5 ${
+                  neonStyle === 'cyan' ? 'border-cyan-500/20 text-cyan-400' : 'border-fuchsia-500/20 text-fuchsia-400'
+                }`}>
+                  <Code className="w-5 h-5" />
                 </div>
-                <h4 className="font-bold text-base md:text-lg text-on-surface">Full Stack</h4>
-                <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">End-to-end development expertise</p>
+                <h4 className="font-extrabold text-base md:text-lg text-white">Full Stack</h4>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">End-to-end development expertise</p>
               </div>
 
               <div 
-                style={{ backgroundColor: glassBgColor }}
+                style={{ backgroundColor: 'rgba(10, 15, 30, 0.3)' }}
                 onMouseMove={handleCardMouseMove}
                 onMouseLeave={handleCardMouseLeave}
-                className="glass-card specular-edge p-6 rounded-xl text-center hover:scale-[1.02] shadow-sm flex flex-col justify-center items-center"
+                className={`glass-card specular-edge p-6 rounded-2xl text-center hover:scale-[1.03] flex flex-col justify-center items-center border border-white/5 transition-all ${
+                  neonStyle === 'cyan' ? 'hover:border-cyan-500/30 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)]' : 'hover:border-fuchsia-500/30 hover:shadow-[0_0_20px_rgba(168,85,247,0.15)]'
+                }`}
               >
-                <div className="text-secondary mb-3 bg-[#4457b3]/10 p-3 rounded-full">
-                  <Brain className="w-6 h-6" />
+                <div className="mb-3 p-3 rounded-full border border-purple-500/20 text-purple-400 bg-white/5">
+                  <Brain className="w-5 h-5" />
                 </div>
-                <h4 className="font-bold text-base md:text-lg text-on-surface">AI Driven</h4>
-                <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">Leveraging latest LLMs and tools</p>
+                <h4 className="font-extrabold text-base md:text-lg text-white">AI Driven</h4>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">Leveraging latest LLMs and tools</p>
               </div>
 
               <div 
-                style={{ backgroundColor: glassBgColor }}
+                style={{ backgroundColor: 'rgba(10, 15, 30, 0.3)' }}
                 onMouseMove={handleCardMouseMove}
                 onMouseLeave={handleCardMouseLeave}
-                className="glass-card specular-edge p-6 rounded-xl text-center hover:scale-[1.02] shadow-sm flex flex-col justify-center items-center"
+                className={`glass-card specular-edge p-6 rounded-2xl text-center hover:scale-[1.03] flex flex-col justify-center items-center border border-white/5 transition-all ${
+                  neonStyle === 'cyan' ? 'hover:border-cyan-500/30 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)]' : 'hover:border-fuchsia-500/30 hover:shadow-[0_0_20px_rgba(168,85,247,0.15)]'
+                }`}
               >
-                <div className="text-[#01dfc0] mb-3 bg-[#01dfc0]/10 p-3 rounded-full">
-                  <Cloud className="w-6 h-6" />
+                <div className={`mb-3 p-3 rounded-full border bg-white/5 ${
+                  neonStyle === 'cyan' ? 'border-cyan-500/20 text-cyan-400' : 'border-fuchsia-500/20 text-fuchsia-400'
+                }`}>
+                  <Cloud className="w-5 h-5" />
                 </div>
-                <h4 className="font-bold text-base md:text-lg text-on-surface">Cloud Ready</h4>
-                <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">Certified AWS infrastructure built</p>
+                <h4 className="font-extrabold text-base md:text-lg text-white">Cloud Ready</h4>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">Certified AWS infrastructure built</p>
               </div>
 
               <div 
-                style={{ backgroundColor: glassBgColor }}
+                style={{ backgroundColor: 'rgba(10, 15, 30, 0.3)' }}
                 onMouseMove={handleCardMouseMove}
                 onMouseLeave={handleCardMouseLeave}
-                className="glass-card specular-edge p-6 rounded-xl text-center hover:scale-[1.02] shadow-sm flex flex-col justify-center items-center"
+                className={`glass-card specular-edge p-6 rounded-2xl text-center hover:scale-[1.03] flex flex-col justify-center items-center border border-white/5 transition-all ${
+                  neonStyle === 'cyan' ? 'hover:border-cyan-500/30 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)]' : 'hover:border-fuchsia-500/30 hover:shadow-[0_0_20px_rgba(168,85,247,0.15)]'
+                }`}
               >
-                <div className="text-rose-500 mb-3 bg-rose-500/10 p-3 rounded-full">
-                  <Terminal className="w-6 h-6" />
+                <div className="mb-3 p-3 rounded-full border border-rose-500/20 text-rose-400 bg-white/5">
+                  <Terminal className="w-5 h-5" />
                 </div>
-                <h4 className="font-bold text-base md:text-lg text-on-surface">Efficient</h4>
-                <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">Clean code and robust structures</p>
+                <h4 className="font-extrabold text-base md:text-lg text-white">Efficient</h4>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">Clean code and robust structures</p>
               </div>
 
             </div>
@@ -650,11 +720,11 @@ export default function App() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-120px" }}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          className="py-20 px-6 md:px-12 bg-[#ffffff]/35 dark:bg-black/30 backdrop-blur-sm border-y border-black/5 dark:border-white/5"
+          className="py-24 px-6 md:px-12 bg-black/45 backdrop-blur-xl border-y border-white/5"
         >
           <div className="max-w-6xl mx-auto">
-            <h2 className="font-display text-4xl font-extrabold text-center text-on-surface mb-4">Technical Arsenal</h2>
-            <p className="text-center text-on-surface-variant/80 max-w-md mx-auto text-xs md:text-sm mb-12">
+            <h2 className="font-display text-4xl font-extrabold text-center text-white tracking-tight mb-4">Technical Arsenal</h2>
+            <p className="text-center text-slate-400 max-w-md mx-auto text-xs md:text-sm mb-12">
               Structured modular layout of specialized tools, server languages, database architecture, and deployment modules Shubham utilizes daily.
             </p>
 
@@ -662,18 +732,20 @@ export default function App() {
               {skillCategories.map((cat, i) => (
                 <div 
                   key={i}
-                  style={{ backgroundColor: glassBgColor }}
-                  className="glass-card specular-edge p-6 rounded-xl space-y-4 shadow-sm border border-black/5"
+                  style={{ backgroundColor: 'rgba(10, 15, 30, 0.3)' }}
+                  className={`glass-card specular-edge p-6 rounded-2xl space-y-4 border border-white/10 transition-all ${
+                    neonStyle === 'cyan' ? 'hover:border-cyan-500/20' : 'hover:border-fuchsia-500/20'
+                  }`}
                 >
-                  <div className="flex items-center gap-3 border-b border-black/5 pb-3">
+                  <div className="flex items-center gap-3 border-b border-white/10 pb-3">
                     {getIconComponent(cat.icon)}
-                    <h3 className="font-display font-extrabold text-base text-on-surface">{cat.title}</h3>
+                    <h3 className="font-display font-extrabold text-base text-white">{cat.title}</h3>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {cat.skills.map((skill) => (
                       <div 
                         key={skill}
-                        className="px-3 py-1.5 bg-black/5 rounded-md border border-black/5 font-display text-xs font-semibold text-on-surface"
+                        className="px-3 py-1.5 bg-white/5 rounded-lg border border-white/5 font-display text-xs font-semibold text-slate-300 hover:text-white hover:border-white/20 transition-all duration-200"
                       >
                         {skill}
                       </div>
@@ -692,47 +764,54 @@ export default function App() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-120px" }}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          className="py-20 px-6 md:px-12 max-w-6xl mx-auto"
+          className="py-24 px-6 md:px-12 max-w-6xl mx-auto"
         >
-          <h2 className="font-display text-4xl font-extrabold text-on-surface mb-4 text-center">Featured Projects</h2>
-          <p className="text-center text-on-surface-variant/80 max-w-md mx-auto text-xs md:text-sm mb-12">
-            Click 'Demo' to trigger actual interactive sandbox modules with live context reasoning outputs.
+          <h2 className="font-display text-4xl font-extrabold text-white tracking-tight mb-4 text-center">Featured Projects</h2>
+          <p className="text-center text-slate-400 max-w-md mx-auto text-xs md:text-sm mb-12">
+            Click 'Interactive Sandbox' to run full local logic modules with visual outputs and system reasoning telemetry logs.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {portfolioProjects.map((project) => (
               <div 
                 key={project.id}
-                style={{ backgroundColor: glassBgColor }}
-                className="glass-card specular-edge rounded-xl overflow-hidden group shadow-sm hover:shadow-lg border border-black/5 flex flex-col justify-between"
+                style={{ backgroundColor: 'rgba(10, 15, 30, 0.35)' }}
+                className={`glass-card specular-edge rounded-2xl overflow-hidden group border border-white/10 flex flex-col justify-between transition-all duration-500 hover:scale-[1.015] hover:border-white/20 ${
+                  neonStyle === 'cyan' ? 'hover:shadow-[0_0_30px_rgba(6,182,212,0.08)]' : 'hover:shadow-[0_0_30px_rgba(168,85,247,0.08)]'
+                }`}
               >
                 <div>
                   {/* Image panel with linear projection */}
-                  <div className="h-56 md:h-64 overflow-hidden relative">
+                  <div className="h-56 md:h-64 overflow-hidden relative border-b border-white/5">
                     <img 
                       alt={project.title} 
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
                       src={project.image}
                       referrerPolicy="no-referrer"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-[#0a0f1d] via-transparent to-transparent pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f1d] via-transparent to-transparent pointer-events-none" />
                   </div>
 
                   <div className="p-6 md:p-8 space-y-4">
                     <div className="text-left">
-                      <h3 className="font-display text-xl font-bold text-on-surface leading-tight">
+                      <h3 className="font-display text-xl font-bold text-white tracking-tight leading-tight">
                         {project.title}
                       </h3>
-                      <p className="text-xs md:text-sm text-on-surface-variant mt-2 leading-relaxed min-h-[60px] max-h-[80px] overflow-y-auto">
+                      <p className="text-xs md:text-sm text-slate-400 mt-2 leading-relaxed min-h-[60px] max-h-[80px] overflow-y-auto">
                         {project.description}
                       </p>
                     </div>
 
                     {/* Displays custom badge tags */}
                     {project.tags && project.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
+                      <div className="flex flex-wrap gap-1.5 pt-1">
                         {project.tags.map((tag, i) => (
-                          <span key={i} className="px-2 py-0.5 bg-primary/10 text-primary rounded-full text-[9px] font-bold font-mono">
+                          <span 
+                            key={i} 
+                            className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold font-mono tracking-wider border ${
+                              neonStyle === 'cyan' ? 'bg-cyan-500/5 border-cyan-500/20 text-cyan-400' : 'bg-fuchsia-500/5 border-fuchsia-500/20 text-fuchsia-400'
+                            }`}
+                          >
                             {tag}
                           </span>
                         ))}
@@ -746,18 +825,22 @@ export default function App() {
                   <div className="flex flex-wrap gap-3 pt-2">
                     <button 
                       onClick={() => setSelectedDemoProjectId(project.id)}
-                      className="flex items-center gap-2 bg-black/5 hover:bg-black/10 px-4 py-2 rounded-lg font-display text-xs font-bold transition-all text-on-surface hover:scale-[1.03] active:scale-95"
+                      className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full font-display text-xs font-bold transition-all text-white border select-none cursor-pointer ${
+                        neonStyle === 'cyan' 
+                          ? 'bg-cyan-500/10 border-cyan-500/20 hover:bg-cyan-500/20 hover:border-cyan-500/40 hover:shadow-[0_0_15px_rgba(6,182,212,0.2)]'
+                          : 'bg-fuchsia-500/10 border-fuchsia-500/20 hover:bg-fuchsia-500/20 hover:border-fuchsia-500/40 hover:shadow-[0_0_15px_rgba(168,85,247,0.2)]'
+                      }`}
                     >
-                      <Sparkles className="w-4 h-4 text-primary animate-spin-slow" /> Interactive Demo
+                      <Sparkles className="w-3.5 h-3.5" /> Interactive Sandbox
                     </button>
                     {project.githubUrl && (
                       <a 
                         href={project.githubUrl} 
                         target="_blank" 
                         rel="noreferrer"
-                        className="flex items-center gap-2 bg-black/5 hover:bg-black/10 px-4 py-2 rounded-lg font-display text-xs font-bold transition-all text-on-surface"
+                        className="flex items-center gap-1.5 bg-white/5 border border-white/10 hover:border-white/20 hover:bg-white/10 px-4 py-2.5 rounded-full font-display text-xs font-bold transition-all text-slate-300 hover:text-white"
                       >
-                        <Github className="w-4 h-4 text-secondary" /> Source Code
+                        <Github className="w-3.5 h-3.5" /> Source Code
                       </a>
                     )}
                   </div>
@@ -774,19 +857,19 @@ export default function App() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-120px" }}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          className="py-20 px-6 md:px-12 max-w-6xl mx-auto space-y-10"
+          className="py-24 px-6 md:px-12 max-w-6xl mx-auto space-y-10"
         >
           <div className="space-y-4">
-            <h2 className="font-display text-4xl font-extrabold text-on-surface mb-2 text-center">Verified Certifications</h2>
-            <p className="text-center text-on-surface-variant/80 max-w-2xl mx-auto text-xs md:text-sm">
+            <h2 className="font-display text-4xl font-extrabold text-white tracking-tight mb-2 text-center">Verified Certifications</h2>
+            <p className="text-center text-slate-400 max-w-2xl mx-auto text-xs md:text-sm">
               Shubham's officially verified technical competencies, professional qualifications, and generative AI specializations. 
             </p>
           </div>
 
           {/* Interactive control bar (Search & Filtration Pills) */}
           <div 
-            style={{ backgroundColor: glassBgColor }}
-            className="glass-card specular-edge p-4 rounded-xl flex flex-col md:flex-row gap-4 items-center justify-between border border-black/5"
+            style={{ backgroundColor: 'rgba(10, 15, 30, 0.4)' }}
+            className="glass-card specular-edge p-4 rounded-2xl flex flex-col md:flex-row gap-4 items-center justify-between border border-white/10"
           >
             {/* Filter pills */}
             <div className="flex flex-wrap items-center gap-2">
@@ -795,19 +878,22 @@ export default function App() {
                 { id: 'major', label: 'Core Specializations' },
                 { id: 'gemini', label: 'Google Gemini' },
                 { id: 'chatgpt', label: 'ChatGPT / OpenAI' }
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setCertFilter(tab.id as any)}
-                  className={`px-4 py-1.5 rounded-full text-xs font-semibold font-display transition-all ${
-                    certFilter === tab.id
-                      ? 'bg-primary text-white shadow-sm scale-102'
-                      : 'bg-black/5 text-on-surface-variant hover:bg-black/10'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
+              ].map(tab => {
+                const isActive = certFilter === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setCertFilter(tab.id as any)}
+                    className={`px-4 py-1.5 rounded-full text-xs font-semibold font-display transition-all cursor-pointer ${
+                      isActive
+                        ? (neonStyle === 'cyan' ? 'bg-[#06b6d4] text-white shadow-[0_0_15px_rgba(6,182,212,0.3)]' : 'bg-[#a855f7] text-white shadow-[0_0_15px_rgba(168,85,247,0.3)]')
+                        : 'bg-white/5 text-slate-300 hover:bg-white/10'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Keyword Search Input */}
@@ -816,14 +902,16 @@ export default function App() {
                 type="text"
                 value={certSearchQuery}
                 onChange={(e) => setCertSearchQuery(e.target.value)}
-                placeholder="Search credentials (e.g. LLM, SEO)..."
-                className="w-full bg-black/5 border border-black/5 rounded-lg pl-9 pr-4 py-2 text-xs font-sans focus:outline-none focus:border-primary text-on-surface transition-colors"
+                placeholder="Search credentials..."
+                className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs font-sans focus:outline-none focus:border-white/20 text-white transition-colors placeholder-slate-500"
               />
-              <Search className="w-3.5 h-3.5 text-on-surface-variant/75 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               {certSearchQuery && (
                 <button 
                   onClick={() => setCertSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary font-bold text-[10px]"
+                  className={`absolute right-3 top-1/2 -translate-y-1/2 font-bold text-[10px] ${
+                    neonStyle === 'cyan' ? 'text-cyan-400' : 'text-fuchsia-400'
+                  }`}
                 >
                   Clear
                 </button>
@@ -835,44 +923,48 @@ export default function App() {
           <div className="space-y-6">
             {majorCerts.length > 0 && (
               <div className="space-y-4">
-                <h3 className="font-display text-sm font-extrabold uppercase tracking-wider text-[#4457b3] dark:text-[#8b9dff]">
+                <h3 className="font-display text-sm font-extrabold uppercase tracking-widest text-slate-400">
                   Core Specializations & Milestones
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {majorCerts.map((badge, index) => (
                     <div 
                       key={index}
-                      style={{ backgroundColor: glassBgColor }}
+                      style={{ backgroundColor: 'rgba(10, 15, 30, 0.3)' }}
                       onMouseMove={handleCardMouseMove}
                       onMouseLeave={handleCardMouseLeave}
-                      className="glass-card specular-edge p-6 rounded-xl flex flex-col justify-between hover:scale-[1.02] shadow-sm border border-black/5 transition-all group"
+                      className={`glass-card specular-edge p-6 rounded-2xl flex flex-col justify-between hover:scale-[1.02] border border-white/10 transition-all duration-300 group ${
+                        neonStyle === 'cyan' ? 'hover:border-cyan-500/20' : 'hover:border-fuchsia-500/20'
+                      }`}
                     >
                       <div className="space-y-4">
                         <div className="flex items-start justify-between">
-                          <div className="bg-white/50 dark:bg-white/5 p-3 rounded-xl shadow-inner border border-black/5 dark:border-white/5 group-hover:scale-105 transition-transform duration-300">
+                          <div className="bg-white/5 p-3 rounded-xl border border-white/5 group-hover:scale-105 transition-transform duration-300">
                             {getIconComponent(badge.icon, "w-6 h-6")}
                           </div>
-                          <span className="text-[9px] font-mono font-bold bg-[#006b5b]/10 text-primary px-2.5 py-0.5 rounded border border-primary/5 uppercase tracking-wider">
+                          <span className={`text-[9px] font-mono font-bold bg-white/5 px-2.5 py-0.5 rounded border uppercase tracking-wider ${
+                            neonStyle === 'cyan' ? 'border-cyan-500/10 text-cyan-400' : 'border-fuchsia-500/10 text-fuchsia-400'
+                          }`}>
                             {badge.issuer || 'Verified'}
                           </span>
                         </div>
                         <div className="space-y-1">
-                          <h4 className="font-display font-black text-sm text-on-surface leading-tight tracking-tight">
+                          <h4 className="font-display font-black text-sm text-white leading-tight tracking-tight">
                             {badge.title}
                           </h4>
-                          <p className="font-sans text-xs text-on-surface-variant/90 leading-relaxed">
+                          <p className="font-sans text-xs text-slate-300 leading-relaxed">
                             {badge.subtitle}
                           </p>
                         </div>
                       </div>
 
                       {/* Footer Info & Verification link */}
-                      <div className="border-t border-black/5 dark:border-white/5 mt-4 pt-3 flex items-center justify-between">
-                        <span className="text-[10px] text-on-surface-variant/75 font-mono">
+                      <div className="border-t border-white/5 mt-4 pt-3 flex items-center justify-between">
+                        <span className="text-[10px] text-slate-400 font-mono">
                           {badge.date || '2025'}
                         </span>
                         {badge.code && (
-                          <span className="text-[9px] font-mono text-on-surface-variant/60 font-semibold">
+                          <span className="text-[9px] font-mono text-slate-500">
                             ID: {badge.code}
                           </span>
                         )}
@@ -881,13 +973,15 @@ export default function App() {
                             href={badge.verifyUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-[10px] text-primary hover:text-[#00dfc0] font-bold font-display flex items-center gap-1 transition-colors"
+                            className={`text-[10px] font-bold font-display flex items-center gap-1 transition-colors ${
+                              neonStyle === 'cyan' ? 'text-cyan-400 hover:text-cyan-300' : 'text-fuchsia-400 hover:text-fuchsia-300'
+                            }`}
                           >
                             Verify <ExternalLink className="w-3 h-3" />
                           </a>
                         ) : (
                           badge.code && badge.issuer === 'Simplilearn' && (
-                            <span className="text-[10px] text-[#4457b3] dark:text-[#8b9dff] font-bold font-display">
+                            <span className="text-[10px] text-purple-400 font-bold font-display">
                               Verified
                             </span>
                           )
@@ -902,19 +996,19 @@ export default function App() {
 
           {/* Accordion / Dropdown Collapsible list for Minor Certifications -> "short down it" */}
           {minorCerts.length > 0 && (
-            <div className="pt-4 border-t border-black/5 space-y-4">
+            <div className="pt-6 border-t border-white/10 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 bg-[#00dfc0] rounded-full animate-pulse" />
-                  <h3 className="font-display text-sm font-extrabold uppercase tracking-wider text-on-surface-variant">
-                    Specialized Work & Applied AI Credentials ({minorCerts.length})
+                  <span className={`w-2 h-2 rounded-full animate-pulse ${neonStyle === 'cyan' ? 'bg-cyan-400' : 'bg-fuchsia-400'}`} />
+                  <h3 className="font-display text-sm font-extrabold uppercase tracking-widest text-slate-400">
+                    Specialized Credentials ({minorCerts.length})
                   </h3>
                 </div>
                 
                 {/* Expand / Close Toggle */}
                 <button
                   onClick={() => setShowAllCerts(!showAllCerts)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-black/5 hover:bg-black/10 rounded-lg text-xs font-bold font-display text-primary transition-all active:scale-95 border border-black/5"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-xs font-bold font-display text-slate-300 hover:text-white transition-all active:scale-95 border border-white/10 cursor-pointer"
                 >
                   {showAllCerts ? (
                     <>Hide <ChevronUp className="w-4 h-4" /></>
@@ -926,43 +1020,47 @@ export default function App() {
 
               {/* Collapsed / Expanded Box */}
               {showAllCerts ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in animate-duration-300">
                   {minorCerts.map((badge, index) => (
                     <div 
                       key={index}
-                      style={{ backgroundColor: glassBgColor }}
-                      className="glass-card specular-edge p-4 rounded-xl flex flex-col justify-between hover:border-primary/20 shadow-sm border border-black/5 dark:border-white/5 transition-all h-full"
+                      style={{ backgroundColor: 'rgba(10, 15, 30, 0.25)' }}
+                      className={`glass-card specular-edge p-4 rounded-xl flex flex-col justify-between border border-white/5 transition-all h-full ${
+                        neonStyle === 'cyan' ? 'hover:border-cyan-500/10' : 'hover:border-fuchsia-500/10'
+                      }`}
                     >
                       <div className="flex gap-3 items-start">
-                        <div className="bg-white/45 dark:bg-white/5 p-2 rounded-lg border border-black/5 dark:border-white/5 shrink-0 mt-0.5">
+                        <div className="bg-white/5 p-2 rounded-lg border border-white/5 shrink-0 mt-0.5">
                           {getIconComponent(badge.icon, "w-4 h-4")}
                         </div>
                         <div className="space-y-0.5 min-w-0">
-                          <h4 className="font-display text-xs font-bold text-on-surface truncate leading-tight" title={badge.title}>
+                          <h4 className="font-display text-xs font-bold text-white truncate leading-tight" title={badge.title}>
                             {badge.title}
                           </h4>
-                          <p className="text-[11px] text-on-surface-variant/90 leading-snug line-clamp-1">
+                          <p className="text-[11px] text-slate-400 leading-snug line-clamp-1">
                             {badge.subtitle}
                           </p>
-                          <p className="text-[10px] font-semibold text-[#4457b3] dark:text-[#8b9dff] font-display flex items-center gap-1 pt-0.5">
-                            {badge.issuer} &bull; <span className="text-on-surface-variant/60 font-medium">{badge.date}</span>
+                          <p className="text-[10px] font-semibold text-slate-300 font-display flex items-center gap-1 pt-0.5">
+                            {badge.issuer} &bull; <span className="text-slate-400 font-medium">{badge.date}</span>
                           </p>
                         </div>
                       </div>
 
-                      <div className="border-t border-black/5 dark:border-white/5 mt-3 pt-2 flex items-center justify-between text-[10px] font-mono text-on-surface-variant/65">
+                      <div className="border-t border-white/5 mt-3 pt-2 flex items-center justify-between text-[10px] font-mono text-slate-500">
                         <span>ID: {badge.code || 'GL-Verify'}</span>
                         {badge.verifyUrl ? (
                           <a 
                             href={badge.verifyUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-primary hover:text-[#00dfc0] font-extrabold font-display flex items-center gap-0.5 transition-colors"
+                            className={`font-bold font-display flex items-center gap-0.5 transition-colors ${
+                              neonStyle === 'cyan' ? 'text-cyan-400 hover:text-cyan-300' : 'text-fuchsia-400 hover:text-fuchsia-300'
+                            }`}
                           >
                             Verify <ExternalLink className="w-2.5 h-2.5" />
                           </a>
                         ) : (
-                          <span className="text-green-600 font-semibold font-sans">Active</span>
+                          <span className="text-[#06b6d4] font-bold">Active</span>
                         )}
                       </div>
                     </div>
@@ -970,23 +1068,25 @@ export default function App() {
                 </div>
               ) : (
                 /* Sleek compact mini preview when closed to fulfill 'short down it' */
-                <div className="bg-white/20 dark:bg-black/30 border border-black/5 dark:border-white/5 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="bg-slate-950/40 border border-white/5 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="bg-primary/10 p-2.5 rounded-full text-primary shrink-0">
-                      <Award className="w-5 h-5" />
+                    <div className="bg-white/5 border border-white/10 p-2.5 rounded-full shrink-0">
+                      <Award className={`w-5 h-5 ${neonStyle === 'cyan' ? 'text-cyan-400 animate-pulse' : 'text-fuchsia-400 animate-pulse'}`} />
                     </div>
                     <div>
-                      <p className="text-xs font-extrabold text-on-surface font-display uppercase tracking-wider">
+                      <p className="text-xs font-extrabold text-white font-display uppercase tracking-widest">
                         {minorCerts.length} Additional AI Credentials Filtered
                       </p>
-                      <p className="text-[11px] text-on-surface-variant leading-relaxed">
+                      <p className="text-[11px] text-slate-400 leading-relaxed max-w-xl">
                         Features prompt engineering, task-agent orchestration with Manus AI, SEO copywriting models, and specific Excel & marketing LLM implementations.
                       </p>
                     </div>
                   </div>
                   <button
                     onClick={() => setShowAllCerts(true)}
-                    className="bg-primary text-white text-[11px] font-bold font-display px-4 py-2 rounded-lg hover:bg-primary/95 transition-all text-center"
+                    className={`text-[10px] font-bold font-display uppercase tracking-widest px-5 py-2.5 rounded-full hover:scale-105 active:scale-95 transition-all text-center text-white cursor-pointer ${
+                      neonStyle === 'cyan' ? 'bg-[#06b6d4] hover:shadow-[0_0_15px_rgba(6,182,212,0.3)]' : 'bg-[#a855f7] hover:shadow-[0_0_15px_rgba(168,85,247,0.3)]'
+                    }`}
                   >
                     Expand All Credentials List
                   </button>
@@ -1023,63 +1123,67 @@ export default function App() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-120px" }}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          className="py-20 px-6 md:px-12 max-w-6xl mx-auto"
+          className="py-24 px-6 md:px-12 max-w-6xl mx-auto"
         >
           
           <div 
-            style={{ backgroundColor: glassBgColor }}
-            className="glass-card specular-edge rounded-xl p-6 md:p-12 shadow-sm border border-black/5"
+            style={{ backgroundColor: 'rgba(10, 15, 30, 0.35)' }}
+            className="glass-card specular-edge rounded-2xl p-6 md:p-12 border border-white/10"
           >
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 font-display">
               
               {/* Context Block */}
               <div className="flex flex-col justify-between space-y-8">
                 <div>
-                  <h2 className="text-4xl md:text-5xl font-extrabold text-on-surface leading-tight">
+                  <h2 className="text-4xl md:text-5xl font-black text-white leading-tight tracking-tight">
                     Let's Create <br />
                     Something Iconic
                   </h2>
-                  <p className="text-xs md:text-sm text-on-surface-variant mt-4 leading-relaxed max-w-sm">
+                  <p className="text-xs md:text-sm text-slate-400 mt-4 leading-relaxed max-w-sm font-sans">
                     Have a full-stack project, an innovative system requirement, or a job offer? Put your details inside and let's craft modern high-tech systems together.
                   </p>
                 </div>
 
                 <div className="space-y-6">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-[#006b5b]/10 flex items-center justify-center text-primary">
+                    <div className={`w-12 h-12 rounded-full bg-white/5 border flex items-center justify-center shrink-0 ${
+                      neonStyle === 'cyan' ? 'border-cyan-500/20 text-cyan-400' : 'border-fuchsia-500/20 text-fuchsia-400'
+                    }`}>
                       <Mail className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold text-[#4457b3] dark:text-[#8b9dff] uppercase tracking-wider">Email</p>
-                      <p className="text-sm font-bold text-on-surface">shelarshubham3236@gmail.com</p>
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Email Address</p>
+                      <p className="text-sm font-black text-white">shelarshubham3236@gmail.com</p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-[#4457b3]/10 dark:bg-[#8b9dff]/15 flex items-center justify-center text-[#4457b3] dark:text-[#8b9dff]">
+                    <div className={`w-12 h-12 rounded-full bg-white/5 border flex items-center justify-center shrink-0 ${
+                      neonStyle === 'cyan' ? 'border-cyan-500/20 text-cyan-400' : 'border-fuchsia-500/20 text-fuchsia-400'
+                    }`}>
                       <Phone className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold text-[#4457b3] dark:text-[#8b9dff] uppercase tracking-wider">Phone</p>
-                      <p className="text-sm font-bold text-on-surface">+91 8600703236</p>
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Mobile Contact</p>
+                      <p className="text-sm font-black text-white">+91 8600703236</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="text-[11px] text-[#4457b3] dark:text-[#8b9dff] font-semibold leading-relaxed">
-                  Active Region: Pune, Maharashtra, India. Supports hybrid and remote pipelines.
+                <div className="text-[11px] text-slate-400 font-semibold leading-relaxed font-sans">
+                  Active Region: Pune, Maharashtra, India. Supports hybrid and remote collaboration pipelines.
                 </div>
               </div>
 
               {/* Input Fields Form container */}
-              <form onSubmit={handleFormSubmit} className="space-y-4">
+              <form onSubmit={handleFormSubmit} className="space-y-5">
                 
                 {formSubmitted && (
-                  <div className="p-4 bg-emerald-50 border border-emerald-300 text-emerald-800 rounded-lg flex items-start gap-1.5 text-xs">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                  <div className="p-4 bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 rounded-xl flex items-start gap-1.5 text-xs animate-fade-in">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
                     <div>
-                      <h4 className="font-bold font-display">Message Received Success!</h4>
-                      <p className="text-emerald-700/90 mt-0.5 font-sans">
+                      <h4 className="font-bold font-display text-white">Message Dispatched Successfully!</h4>
+                      <p className="text-slate-300 mt-1 font-sans leading-relaxed">
                         Thanks for connecting with Shubham Shelar! He will respond to your requested topic under 24 hours.
                       </p>
                     </div>
@@ -1087,51 +1191,51 @@ export default function App() {
                 )}
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Full Name</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Full Name</label>
                   <input 
                     type="text" 
                     name="fullName"
                     value={formData.fullName}
                     onChange={handleInputChange}
                     placeholder="John Doe" 
-                    className={`w-full bg-black/5 border ${formErrors.fullName ? 'border-rose-400' : 'border-black/5'} rounded-lg p-3.5 focus:outline-none focus:border-primary transition-colors text-on-surface text-sm`}
+                    className={`w-full bg-slate-950/45 border ${formErrors.fullName ? 'border-rose-500' : 'border-white/10'} rounded-xl p-3.5 focus:outline-none focus:border-white/20 text-white text-sm placeholder-slate-600 transition-colors focus:shadow-[0_0_15px_rgba(255,255,255,0.02)]`}
                   />
                   {formErrors.fullName && (
-                    <p className="text-rose-500 text-[10px] font-semibold flex items-center gap-1">
+                    <p className="text-rose-400 text-[10px] font-semibold flex items-center gap-1">
                       <AlertCircle className="w-3 h-3" /> {formErrors.fullName}
                     </p>
                   )}
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Email Address</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Email Address</label>
                   <input 
                     type="email" 
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
                     placeholder="john@example.com" 
-                    className={`w-full bg-black/5 border ${formErrors.email ? 'border-rose-400' : 'border-black/5'} rounded-lg p-3.5 focus:outline-none focus:border-primary transition-colors text-on-surface text-sm`}
+                    className={`w-full bg-slate-950/45 border ${formErrors.email ? 'border-rose-500' : 'border-white/10'} rounded-xl p-3.5 focus:outline-none focus:border-white/20 text-white text-sm placeholder-slate-600 transition-colors focus:shadow-[0_0_15px_rgba(255,255,255,0.02)]`}
                   />
                   {formErrors.email && (
-                    <p className="text-rose-500 text-[10px] font-semibold flex items-center gap-1">
+                    <p className="text-rose-400 text-[10px] font-semibold flex items-center gap-1">
                       <AlertCircle className="w-3 h-3" /> {formErrors.email}
                     </p>
                   )}
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Message</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Message Overview</label>
                   <textarea 
                     name="message"
                     value={formData.message}
                     onChange={handleInputChange}
                     placeholder="Tell me about your project..." 
                     rows={4}
-                    className={`w-full bg-black/5 border ${formErrors.message ? 'border-rose-400' : 'border-black/5'} rounded-lg p-3.5 focus:outline-none focus:border-primary transition-colors text-on-surface text-sm`}
+                    className={`w-full bg-slate-950/45 border ${formErrors.message ? 'border-rose-500' : 'border-white/10'} rounded-xl p-3.5 focus:outline-none focus:border-white/20 text-white text-sm placeholder-slate-600 transition-colors focus:shadow-[0_0_15px_rgba(255,255,255,0.02)]`}
                   />
                   {formErrors.message && (
-                    <p className="text-rose-500 text-[10px] font-semibold flex items-center gap-1">
+                    <p className="text-rose-400 text-[10px] font-semibold flex items-center gap-1">
                       <AlertCircle className="w-3 h-3" /> {formErrors.message}
                     </p>
                   )}
@@ -1140,12 +1244,16 @@ export default function App() {
                 <button 
                   type="submit"
                   disabled={isSending}
-                  className="w-full bg-primary-container text-on-primary-container font-headline-md text-sm font-bold py-3.5 rounded-lg primary-glow hover:scale-[1.01] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                  className={`w-full py-3.5 rounded-xl font-bold font-display text-xs uppercase tracking-widest text-white shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99] duration-300 cursor-pointer ${
+                    neonStyle === 'cyan' 
+                      ? 'bg-cyan-500 hover:bg-cyan-600 hover:shadow-[0_0_20px_rgba(6,182,212,0.3)]' 
+                      : 'bg-fuchsia-500 hover:bg-fuchsia-600 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)]'
+                  } flex items-center justify-center gap-2`}
                 >
                   {isSending ? (
                     <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                   ) : (
-                    <Send className="w-4 h-4" />
+                    <Send className="w-3.5 h-3.5" />
                   )}
                   {isSending ? 'Transmitting package...' : 'Send Message'}
                 </button>
@@ -1158,76 +1266,49 @@ export default function App() {
 
       {/* Floating Interactive Right SideNavBar Quick Menu */}
       <nav 
-        style={{ backdropFilter: glassBlurValue }}
-        className="fixed right-6 bottom-6 z-40 flex flex-col gap-3 p-1.5 items-center bg-white/30 border border-black/10 rounded-full shadow-[0_10px_35px_rgba(0,0,0,0.06)]"
+        className="fixed right-6 bottom-6 z-40 flex flex-col gap-3 p-1.5 items-center bg-black/40 border border-white/10 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-xl"
       >
-        <button 
-          onClick={() => handleScrollToSection('hero')}
-          className={`p-2.5 rounded-full transition-all ${
-            currentSection === 'hero' ? 'bg-primary text-white scale-110 shadow-md' : 'text-on-surface hover:bg-black/5'
-          }`}
-          title="Home"
-        >
-          <Home className="w-4 h-4" />
-        </button>
-
-        <button 
-          onClick={() => handleScrollToSection('about')}
-          className={`p-2.5 rounded-full transition-all ${
-            currentSection === 'about' ? 'bg-primary text-white scale-110 shadow-md' : 'text-on-surface hover:bg-black/5'
-          }`}
-          title="About Me"
-        >
-          <Briefcase className="w-4 h-4" />
-        </button>
-
-        <button 
-          onClick={() => handleScrollToSection('skills')}
-          className={`p-2.5 rounded-full transition-all ${
-            currentSection === 'skills' ? 'bg-primary text-white scale-110 shadow-md' : 'text-on-surface hover:bg-black/5'
-          }`}
-          title="Technical Arsenal"
-        >
-          <Zap className="w-4 h-4" />
-        </button>
-
-        <button 
-          onClick={() => handleScrollToSection('certifications')}
-          className={`p-2.5 rounded-full transition-all ${
-            currentSection === 'certifications' ? 'bg-primary text-white scale-110 shadow-md' : 'text-on-surface hover:bg-black/5'
-          }`}
-          title="Certifications"
-        >
-          <Award className="w-4 h-4" />
-        </button>
-
-        <button 
-          onClick={() => handleScrollToSection('contact')}
-          className={`p-2.5 rounded-full transition-all ${
-            currentSection === 'contact' ? 'bg-primary text-white scale-110 shadow-md' : 'text-on-surface hover:bg-black/5'
-          }`}
-          title="Message"
-        >
-          <Mail className="w-4 h-4" />
-        </button>
+        {[
+          { id: 'hero', icon: <Home className="w-4 h-4" />, title: 'Home' },
+          { id: 'about', icon: <Briefcase className="w-4 h-4" />, title: 'About' },
+          { id: 'skills', icon: <Zap className="w-4 h-4" />, title: 'Skills' },
+          { id: 'certifications', icon: <Award className="w-4 h-4" />, title: 'Certifications' },
+          { id: 'contact', icon: <Mail className="w-4 h-4" />, title: 'Message' }
+        ].map(btn => {
+          const isActive = currentSection === btn.id;
+          return (
+            <button 
+              key={btn.id}
+              onClick={() => handleScrollToSection(btn.id)}
+              className={`p-2.5 rounded-full transition-all cursor-pointer ${
+                isActive 
+                  ? (neonStyle === 'cyan' ? 'bg-cyan-500 text-white shadow-[0_0_15px_rgba(6,182,212,0.5)] scale-110' : 'bg-fuchsia-500 text-white shadow-[0_0_15px_rgba(168,85,247,0.5)] scale-110') 
+                  : 'text-slate-400 hover:text-white hover:bg-white/5'
+              }`}
+              title={btn.title}
+            >
+              {btn.icon}
+            </button>
+          );
+        })}
       </nav>
 
       {/* FOOTER SECTION */}
-      <footer className="w-full py-12 px-6 md:px-12 flex flex-col md:flex-row justify-between items-center border-t border-black/5 backdrop-blur-md bg-[#ffffff]/35">
-        <div className="font-display font-bold text-lg text-primary mb-3 md:mb-0">
-          Shubham Shelar
+      <footer className="w-full py-12 px-6 md:px-12 flex flex-col md:flex-row justify-between items-center border-t border-white/5 bg-[#030712]/80 backdrop-blur-md">
+        <div className="font-display font-black text-lg text-white tracking-widest mb-3 md:mb-0">
+          SHUBHAM
         </div>
         
-        <div className="text-xs text-on-surface-variant/70 text-center font-display">
-          © 2026 Shubham Shelar. Built with Liquid Glass Flow. Autogenous Design.
+        <div className="text-xs text-slate-500 text-center font-display tracking-wide">
+          © 2026 Shubham Shelar. Styled with Premium Glassmorphism + Dynamic Fluidity.
         </div>
 
         <div className="flex gap-4 mt-3 md:mt-0">
           <a 
             href="https://linkedin.com/in/shubhamshelar" 
             target="_blank" 
-            rel="noreferrer"
-            className="text-on-surface-variant hover:text-primary transition-colors hover:scale-110 p-1"
+            rel="_noreferrer"
+            className="text-slate-400 hover:text-white transition-colors hover:scale-110 p-1"
             title="LinkedIn profile"
           >
             <Linkedin className="w-5 h-5" />
@@ -1235,8 +1316,8 @@ export default function App() {
           <a 
             href="https://github.com/shubhamshelar" 
             target="_blank" 
-            rel="noreferrer"
-            className="text-on-surface-variant hover:text-primary transition-colors hover:scale-110 p-1"
+            rel="_noreferrer"
+            className="text-slate-400 hover:text-white transition-colors hover:scale-110 p-1"
             title="GitHub profile"
           >
             <Github className="w-5 h-5" />
